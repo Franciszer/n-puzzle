@@ -1,8 +1,8 @@
-use std::convert::TryInto;
+use crate::Map;
 use once_cell::sync::OnceCell;
+use std::convert::TryInto;
 
-pub static SIZE: OnceCell<u16> = OnceCell::new();
-pub static BOARD_SIZE: OnceCell<u16> = OnceCell::new();
+pub static MAP: OnceCell<Map> = OnceCell::new();
 
 // TODO make State.size and State.board_size static
 
@@ -15,13 +15,13 @@ struct Point {
 impl Point {
     #[inline]
     fn to_1d(&self) -> u16 {
-        self.x * SIZE.get().unwrap() + self.y
+        self.x * MAP.get().unwrap().size + self.y
     }
 
     fn to_2d(idx: u16) -> Point {
         Point {
-            x: idx / SIZE.get().unwrap(),
-            y: idx % SIZE.get().unwrap(),
+            x: idx / MAP.get().unwrap().size,
+            y: idx % MAP.get().unwrap().size,
         }
     }
 
@@ -37,7 +37,7 @@ impl Point {
     }
 
     fn right(&self) -> Option<Point> {
-        if self.x >= SIZE.get().unwrap() - 1 {
+        if self.x >= MAP.get().unwrap().size - 1 {
             None
         } else {
             Some(Point {
@@ -59,7 +59,7 @@ impl Point {
     }
 
     fn down(&self) -> Option<Point> {
-        if self.y >= SIZE.get().unwrap() - 1 {
+        if self.y >= MAP.get().unwrap().size - 1 {
             None
         } else {
             Some(Point {
@@ -79,11 +79,15 @@ pub struct State {
 
 impl State {
     fn build_state(board: Vec<u16>) -> State {
-        let zero = Point::to_2d(board.iter().position(|&r| r == 0).unwrap().try_into().unwrap());
-        State {
-            board,
-            pos: zero,
-        }
+        let zero = Point::to_2d(
+            board
+                .iter()
+                .position(|&r| r == 0)
+                .unwrap()
+                .try_into()
+                .unwrap(),
+        );
+        State { board, pos: zero }
     }
 
     fn build_child(&self, new_pos: &Point) -> State {
@@ -96,13 +100,16 @@ impl State {
     }
 
     pub fn gen_children(&self) -> [Option<State>; 4] {
-        let children_pos: [Option<Point>; 4] = [self.pos.left(), self.pos.right(), self.pos.up(), self.pos.down()];
+        let children_pos: [Option<Point>; 4] = [
+            self.pos.left(),
+            self.pos.right(),
+            self.pos.up(),
+            self.pos.down(),
+        ];
 
-        let children: [Option<State>; 4] = children_pos.map(|el| {
-            match el {
-                Some(p) => Some(self.build_child(&p)),
-                None => None
-            }
+        let children: [Option<State>; 4] = children_pos.map(|el| match el {
+            Some(p) => Some(self.build_child(&p)),
+            None => None,
         });
 
         children
@@ -167,7 +174,7 @@ mod tests {
         let p = p.left();
         match p {
             Some(_) => assert!(false),
-            None => assert!(true)
+            None => assert!(true),
         }
     }
 
@@ -182,7 +189,7 @@ mod tests {
         let p = p.right();
         match p {
             Some(_) => assert!(false),
-            None => assert!(true)
+            None => assert!(true),
         }
     }
 
@@ -197,7 +204,7 @@ mod tests {
         let p = p.up();
         match p {
             Some(_) => assert!(false),
-            None => assert!(true)
+            None => assert!(true),
         }
     }
 
@@ -212,7 +219,7 @@ mod tests {
         let p = p.down();
         match p {
             Some(_) => assert!(false),
-            None => assert!(true)
+            None => assert!(true),
         }
     }
 

@@ -21,7 +21,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let (_, (size, board)) = parser::parse_map(input)?;
     let map = parser::validate_map(size, board)?;
     println!("{:?}", map);
-    state::SIZE.set(3).unwrap();
-    state::BOARD_SIZE.set(9).unwrap();
+    state::MAP.set(map).unwrap();
     Ok(())
 }
