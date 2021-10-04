@@ -108,6 +108,43 @@ impl State {
 
         children
     }
+
+    fn      get_inv_count(&self) -> u16 {
+        let mut count: u16 = 0;
+
+        for i in 0..(self.board.len() - 1) {
+            for j in i+1..self.board.len() {
+
+                let left = self.board[i];
+                let right = self.board[j];
+
+                if (right != 0 && right > left) {
+                    count += 1;
+                }
+            }
+        }
+
+        count
+    }
+
+    pub fn is_solvable(&self) -> bool {
+        let inv_count = self.get_inv_count();
+
+        if (SIZE.get().unwrap() & 1 != 0) {
+            inv_count & 1 == 0
+        }
+        else {
+            let pos: u16 = self.pos.to_1d();
+
+            if (pos & 1 != 0) {
+                inv_count & 1 == 0
+            }
+            else {
+                inv_count & 1 != 0
+            }
+        }
+
+    }
 }
 
 #[cfg(test)]
@@ -198,7 +235,7 @@ mod tests {
         SIZE.set(3).unwrap();
         BOARD_SIZE.set(9).unwrap();
         let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8]);
-        let s2 = s.build_child(&Point {x: 0, y: 0});
+        let s2 = s.build_child(&Point { x: 0, y: 0 });
         assert_eq!(s2.pos.to_1d(), 0);
         assert_eq!(s2.board[s2.pos.to_1d() as usize], 0);
         assert_eq!(s2.board[7], 1);
@@ -211,6 +248,16 @@ mod tests {
         SIZE.set(3).unwrap();
         BOARD_SIZE.set(9).unwrap();
         let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8]);
-        let _s2 = s.build_child(&Point {x: 10, y: 10});
+        let _s2 = s.build_child(&Point { x: 10, y: 10 });
+    }
+
+    #[test]
+    fn state_is_valid_pair() {
+        use super::*;
+        SIZE.set(3).unwrap();
+        BOARD_SIZE.set(9).unwrap();
+        let s = State::build_state(vec![6, 7, 3, 4, 0, 5, 2, 8, 1]);
+        let result = s.is_solvable();
+        assert!(result == false);
     }
 }
