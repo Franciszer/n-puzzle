@@ -1,11 +1,3 @@
-use crate::Map;
-use once_cell::sync::OnceCell;
-use std::convert::TryInto;
-
-pub static MAP: OnceCell<Map> = OnceCell::new();
-
-// TODO make State.size and State.board_size static
-
 #[derive(Debug)]
 struct Point {
     x: u16,
@@ -13,15 +5,14 @@ struct Point {
 }
 
 impl Point {
-    #[inline]
-    fn to_1d(&self) -> u16 {
-        self.x * MAP.get().unwrap().size + self.y
+    fn to_1d(&self, size: u16) -> u16 {
+        self.x * size + self.y
     }
 
-    fn to_2d(idx: u16) -> Point {
+    fn from_1d(x: u16, size: u16) -> Point {
         Point {
-            x: idx / MAP.get().unwrap().size,
-            y: idx % MAP.get().unwrap().size,
+            x: x / size,
+            y: x % size,
         }
     }
 
@@ -36,8 +27,8 @@ impl Point {
         }
     }
 
-    fn right(&self) -> Option<Point> {
-        if self.x >= MAP.get().unwrap().size - 1 {
+    fn right(&self, size: u16) -> Option<Point> {
+        if self.x >= size - 1 {
             None
         } else {
             Some(Point {
@@ -58,8 +49,8 @@ impl Point {
         }
     }
 
-    fn down(&self) -> Option<Point> {
-        if self.y >= MAP.get().unwrap().size - 1 {
+    fn down(&self, size: u16) -> Option<Point> {
+        if self.y >= size - 1 {
             None
         } else {
             Some(Point {
@@ -78,37 +69,30 @@ pub struct State {
 }
 
 impl State {
-    fn build_state(board: Vec<u16>) -> State {
-        let zero = Point::to_2d(
-            board
-                .iter()
-                .position(|&r| r == 0)
-                .unwrap()
-                .try_into()
-                .unwrap(),
-        );
+    fn build_state(board: Vec<u16>, size: u16) -> State {
+        let zero = Point::from_1d(board.iter().position(|&r| r == 0).unwrap() as u16, size);
         State { board, pos: zero }
     }
 
-    fn build_child(&self, new_pos: &Point) -> State {
-        let parent_idx = self.pos.to_1d();
-        let child_idx = new_pos.to_1d();
+    fn build_child(&self, new_pos: &Point, size: u16) -> State {
+        let parent_idx = self.pos.to_1d(size);
+        let child_idx = new_pos.to_1d(size);
 
         let mut v: Vec<u16> = self.board.clone();
         v.swap(parent_idx.into(), child_idx.into());
-        State::build_state(v)
+        State::build_state(v, size)
     }
 
-    pub fn gen_children(&self) -> [Option<State>; 4] {
+    pub fn gen_children(&self, size: u16) -> [Option<State>; 4] {
         let children_pos: [Option<Point>; 4] = [
             self.pos.left(),
-            self.pos.right(),
+            self.pos.right(size),
             self.pos.up(),
-            self.pos.down(),
+            self.pos.down(size),
         ];
 
         let children: [Option<State>; 4] = children_pos.map(|el| match el {
-            Some(p) => Some(self.build_child(&p)),
+            Some(p) => Some(self.build_child(&p, size)),
             None => None,
         });
 
@@ -156,7 +140,7 @@ impl State {
 
 #[cfg(test)]
 mod tests {
-    use crate::state::Point;
+    use super::{Point, State};
 
     #[test]
     fn points_basic() {
@@ -180,13 +164,11 @@ mod tests {
 
     #[test]
     fn points_right() {
-        crate::state::SIZE.set(3).unwrap();
-        crate::state::BOARD_SIZE.set(9).unwrap();
         let p = Point { x: 1, y: 1 };
-        let p = p.right().unwrap();
+        let p = p.right(3).unwrap();
         assert_eq!(p.x, 2);
         assert_eq!(p.y, 1);
-        let p = p.right();
+        let p = p.right(3);
         match p {
             Some(_) => assert!(false),
             None => assert!(true),
@@ -195,8 +177,6 @@ mod tests {
 
     #[test]
     fn points_up() {
-        crate::state::SIZE.set(3).unwrap();
-        crate::state::BOARD_SIZE.set(9).unwrap();
         let p = Point { x: 1, y: 1 };
         let p = p.up().unwrap();
         assert_eq!(p.x, 1);
@@ -210,13 +190,11 @@ mod tests {
 
     #[test]
     fn points_down() {
-        crate::state::SIZE.set(3).unwrap();
-        crate::state::BOARD_SIZE.set(9).unwrap();
         let p = Point { x: 1, y: 1 };
-        let p = p.down().unwrap();
+        let p = p.down(3).unwrap();
         assert_eq!(p.x, 1);
         assert_eq!(p.y, 2);
-        let p = p.down();
+        let p = p.down(3);
         match p {
             Some(_) => assert!(false),
             None => assert!(true),
@@ -225,36 +203,27 @@ mod tests {
 
     #[test]
     fn state_build_state() {
-        use super::*;
-        SIZE.set(3).unwrap();
-        BOARD_SIZE.set(9).unwrap();
-        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8]);
-        assert_eq!(s.pos.to_1d(), 7);
-        let s = State::build_state(vec![0, 2, 3, 4, 5, 6, 7, 1, 8]);
-        assert_eq!(s.pos.to_1d(), 0);
-        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 8, 0]);
-        assert_eq!(s.pos.to_1d(), 8);
+        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8], 3);
+        assert_eq!(s.pos.to_1d(3), 7);
+        let s = State::build_state(vec![0, 2, 3, 4, 5, 6, 7, 1, 8], 3);
+        assert_eq!(s.pos.to_1d(3), 0);
+        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 8, 0], 3);
+        assert_eq!(s.pos.to_1d(3), 8);
     }
 
     #[test]
     fn state_build_child() {
-        use super::*;
-        SIZE.set(3).unwrap();
-        BOARD_SIZE.set(9).unwrap();
-        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8]);
-        let s2 = s.build_child(&Point { x: 0, y: 0 });
-        assert_eq!(s2.pos.to_1d(), 0);
-        assert_eq!(s2.board[s2.pos.to_1d() as usize], 0);
+        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8], 3);
+        let s2 = s.build_child(&Point { x: 0, y: 0 }, 3);
+        assert_eq!(s2.pos.to_1d(3), 0);
+        assert_eq!(s2.board[s2.pos.to_1d(3) as usize], 0);
         assert_eq!(s2.board[7], 1);
     }
 
     #[test]
     #[should_panic]
     fn state_build_child_panic() {
-        use super::*;
-        SIZE.set(3).unwrap();
-        BOARD_SIZE.set(9).unwrap();
-        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8]);
-        let _s2 = s.build_child(&Point { x: 10, y: 10 });
+        let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8], 3);
+        let _s2 = s.build_child(&Point { x: 10, y: 10 }, 3);
     }
 }
