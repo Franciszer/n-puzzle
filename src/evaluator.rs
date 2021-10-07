@@ -46,6 +46,30 @@ mod tests {
 	}
 
 	#[test]
+	fn evaluate_unsolved() {
+		let solved = gen_solved_map(5);
+		let e = Evaluator::build_evaluator(&solved);
+
+		println!("{:?}", solved);
+		let mut v = solved.board.clone();
+		v.swap(0, 1);
+		let s = State::build_state(v, solved.size);
+		assert_eq!(e.evaluate(&s), 2);
+
+		let solved = gen_solved_map(5);
+		let e = Evaluator::build_evaluator(&solved);
+
+		println!("{:?}", solved);
+		let mut v = solved.board.clone();
+		v.swap(0, 1);
+		v.swap(5, 22);
+		v.swap(3, 21);
+		let s = State::build_state(v, solved.size);
+		assert_eq!(e.evaluate(&s), 24);
+
+	}
+
+	#[test]
 	fn evaluate_solved() {
 		for i in 3..16 {
 			let solved = gen_solved_map(i);

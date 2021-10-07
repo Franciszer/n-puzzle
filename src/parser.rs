@@ -51,11 +51,25 @@ pub fn validate_map(size: u16, board: Vec<Vec<u16>>) -> Result<Map, &'static str
         size,
         board: Vec::with_capacity(size as usize),
     };
+    let mut validator = vec![false; (size * size) as usize];
     for v in board {
         if v.len() != size as usize {
             return Err("Board has invalid size");
         }
+        for item in v.iter() {
+            if (*item as usize) < validator.len() {
+                validator[*item as usize] = true;
+            }
+            else {
+                return Err("Invalid value in board")
+            }
+        }
         map.board.extend(v);
+    }
+    for item in validator.iter() {
+		if *item == false {
+			return Err("Invalid Board");
+		}
     }
     Ok(map)
 }
