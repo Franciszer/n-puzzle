@@ -1,20 +1,43 @@
 use crate::map::Map;
-use nom::bytes::complete::take_while1;
+use nom::branch::alt;
+use nom::bytes::complete::{is_not, take_while1};
 use nom::character::complete;
-use nom::character::complete::multispace0;
+use nom::character::complete::{char, multispace0};
+use nom::combinator::value;
 use nom::multi::{separated_list0, separated_list1};
+use nom::sequence::pair;
 use nom::IResult;
 
 fn consume_line(line: &str) -> IResult<&str, Vec<u16>> {
-    let (remaining, data) = separated_list1(take_while1(|c| c == ' '), complete::u16)(line)?;
-    Ok((remaining, data))
+    separated_list1(take_while1(|c| c == ' '), complete::u16)(line)
+}
+
+fn parse_comments(input: &str) -> IResult<&str, ()> {
+    let mut remaining = input;
+    loop {
+        if let Ok((rem, ())) = parse_comment(remaining) {
+            if rem.len() != remaining.len() {
+                // Continue only if something was consumed
+                remaining = rem;
+                continue;
+            }
+        }
+        break;
+    }
+    Ok((remaining, ()))
+}
+fn parse_comment(input: &str) -> IResult<&str, ()> {
+    alt((
+        value((), pair(char('#'), is_not("\n\r"))),
+        value((), multispace0),
+    ))(input)
 }
 
 pub fn parse_map(map: &str) -> IResult<&str, (u16, Vec<Vec<u16>>)> {
-    //TODO: Comments
-    let (remaining, size) = complete::u16(map)?;
-    let (remaining, _whitespace) = multispace0(remaining)?; // Remove the trailing newline after the map size
-    let (remaining, board) = separated_list0(take_while1(|c| c == '\n'), consume_line)(remaining)?;
+    let (remaining, _) = parse_comments(map)?;
+    let (remaining, size) = complete::u16(remaining)?;
+    let (remaining, _) = parse_comments(remaining)?; // Remove the trailing newline after the map size
+    let (remaining, board) = separated_list0(parse_comments, consume_line)(remaining)?;
 
     Ok((remaining, (size, board)))
 }
