@@ -2,9 +2,9 @@ use crate::map::Map;
 use crate::state::Point;
 use crate::state::State;
 
-struct Evaluator {
+pub struct Evaluator {
 	solved_table: Vec<Point>,
-	size: u16,
+	size: u16
 }
 
 impl<'a> Evaluator {
