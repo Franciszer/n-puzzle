@@ -8,6 +8,7 @@ mod map;
 mod node;
 mod parser;
 mod state;
+mod evaluator;
 
 fn main() -> Result<(), Box<dyn Error>> {
 	let input = "
