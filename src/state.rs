@@ -1,5 +1,5 @@
 #[derive(Debug)]
-struct Point {
+pub struct Point {
     x: u16,
     y: u16,
 }
@@ -9,7 +9,7 @@ impl Point {
         self.x * size + self.y
     }
 
-    fn from_1d(x: u16, size: u16) -> Point {
+    pub fn from_1d(x: u16, size: u16) -> Point {
         Point {
             x: x / size,
             y: x % size,
