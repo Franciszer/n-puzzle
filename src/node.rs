@@ -1,7 +1,7 @@
 use crate::state::State;
 
-pub struct Node {
-	// pub node: &Node;
+pub struct Node<'a> {
+	pub parent: &'a Node<'a>,
 	// heuristic score
 	pub score: u16,
 	// number of moves from initial state

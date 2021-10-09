@@ -2,26 +2,24 @@
 use executor::Executor;
 use std::error::Error;
 
+mod solver;
 mod executor;
 mod map;
+mod node;
 mod parser;
 mod state;
-mod evaluator;
-mod node;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let input = "
-# YOLO
-6 #XXXX
-0  10 5  7  16 25
-11 14 4  8  17 26# TEST
-1  2  6  13 18 27
-12 3  15 9  19 28
-20 21 22 23 24 29
-30 31 32 33 34 35
+	let input = "
+# This puzzle is solvable
+4
+10  0 13  7
+ 1  3  2 11
+ 6  9 15  5
+14  4 12  8
 ";
-    let (_, (size, board)) = parser::parse_map(input)?;
-    let executor = Executor::new(parser::validate_map(size, board)?);
-    executor.run();
-    Ok(())
+	let (_, (size, board)) = parser::parse_map(input)?;
+	let executor = Executor::new(parser::validate_map(size, board)?);
+	executor.run();
+	Ok(())
 }
