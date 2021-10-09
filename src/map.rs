@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Map {
 	pub size: u16,
 	pub board: Vec<u16>,

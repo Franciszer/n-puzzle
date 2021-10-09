@@ -1,4 +1,6 @@
+use std::collections::{BinaryHeap, HashMap};
 use crate::map::Map;
+use crate::node::Node;
 use crate::state::Point;
 use crate::state::State;
 
@@ -67,6 +69,17 @@ impl Solver {
 			}
 		}
 	}
+
+	pub fn solve(&self, map: Map) {
+		let root = State::from(map);
+		// TODO: Needs Ord
+		// let mut queue: BinaryHeap<Node> = BinaryHeap::new();
+		// queue.push(Node {
+		// 	parent: None,
+		// 	score: self.compute_score(&root),
+		// 	state: root,
+		// })
+	}
 }
 
 trait Oddness {
@@ -101,24 +114,22 @@ mod tests {
 
 	#[test]
 	fn evaluate_unsolved() {
-		let solved = gen_solved_map(5);
+		let mut solved = gen_solved_map(5);
 		let e = Solver::new(&solved);
 
 		println!("{:?}", solved);
-		let mut v = solved.board.clone();
-		v.swap(0, 1);
-		let s = State::build_state(v, solved.size);
+		solved.board.swap(0, 1);
+		let s = State::from(solved);
 		assert_eq!(e.compute_score(&s), 2);
 
-		let solved = gen_solved_map(5);
+		let mut solved = gen_solved_map(5);
 		let e = Solver::new(&solved);
 
 		println!("{:?}", solved);
-		let mut v = solved.board.clone();
-		v.swap(0, 1);
-		v.swap(5, 22);
-		v.swap(3, 21);
-		let s = State::build_state(v, solved.size);
+		solved.board.swap(0, 1);
+		solved.board.swap(5, 22);
+		solved.board.swap(3, 21);
+		let s = State::from(solved);
 		assert_eq!(e.compute_score(&s), 24);
 	}
 
@@ -127,7 +138,7 @@ mod tests {
 		for i in 3..16 {
 			let solved = gen_solved_map(i);
 			let e = Solver::new(&solved);
-			let s = State::build_state(solved.board, solved.size);
+			let s = State::from(solved);
 			assert_eq!(e.compute_score(&s), 0);
 		}
 	}

@@ -16,8 +16,10 @@ impl Executor {
 	}
 
 	pub fn run(&self) {
-		print!("{}\n", self.solver.is_solvable(&self.map));
+		if self.solver.is_solvable(&self.map) {
+			self.solver.solve(self.map.clone());
+		} else {
+			print!("Puzzle is not solvable !");
+		}
 	}
-
-	// fn solve
 }

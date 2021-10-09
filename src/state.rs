@@ -1,3 +1,5 @@
+use crate::map::Map;
+
 #[derive(Debug, Clone)]
 pub struct Point {
 	x: u16,
@@ -79,30 +81,30 @@ pub struct State {
 	// state of the board
 	pub board: Vec<u16>,
 	// position of 0 on board
-	pos: Point,
+	zero: Point,
 }
 
 impl State {
-	pub fn build_state(board: Vec<u16>, size: u16) -> State {
-		let zero = Point::from_1d(board.iter().position(|&r| r == 0).unwrap() as u16, size);
-		State { board, pos: zero }
+	pub fn new(board: Vec<u16>, zero: Point, size: u16) -> State {
+		State { board, zero }
 	}
 
 	fn build_child(&self, new_pos: &Point, size: u16) -> State {
-		let parent_idx = self.pos.to_1d(size);
+		let parent_idx = self.zero.to_1d(size);
 		let child_idx = new_pos.to_1d(size);
 
 		let mut v: Vec<u16> = self.board.clone();
 		v.swap(parent_idx.into(), child_idx.into());
-		State::build_state(v, size)
+		// TODO get rid of clone
+		State::new(v, new_pos.clone(), size)
 	}
 
 	pub fn gen_children(&self, size: u16) -> [Option<State>; 4] {
 		let children_pos: [Option<Point>; 4] = [
-			self.pos.left(),
-			self.pos.right(size),
-			self.pos.up(),
-			self.pos.down(size),
+			self.zero.left(),
+			self.zero.right(size),
+			self.zero.up(),
+			self.zero.down(size),
 		];
 
 		let children: [Option<State>; 4] = children_pos.map(|el| match el {
@@ -114,8 +116,16 @@ impl State {
 	}
 }
 
+impl From<Map> for State {
+	fn from(map: Map) -> Self {
+		let zero = Point::from_1d(map.board.iter().position(|&r| r == 0).unwrap() as u16, map.size);
+		State { board: map.board, zero}
+	}
+}
+
 #[cfg(test)]
 mod tests {
+	use crate::map::Map;
 	use super::{Point, State};
 
 	#[test]
@@ -179,27 +189,27 @@ mod tests {
 
 	#[test]
 	fn state_build_state() {
-		let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8], 3);
-		assert_eq!(s.pos.to_1d(3), 7);
-		let s = State::build_state(vec![0, 2, 3, 4, 5, 6, 7, 1, 8], 3);
-		assert_eq!(s.pos.to_1d(3), 0);
-		let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 8, 0], 3);
-		assert_eq!(s.pos.to_1d(3), 8);
+		let s = State::from(Map { board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8], size: 3});
+		assert_eq!(s.zero.to_1d(3), 7);
+		let s = State::from(Map { board: vec![0, 2, 3, 4, 5, 6, 7, 1, 8], size: 3 });
+		assert_eq!(s.zero.to_1d(3), 0);
+		let s = State::from(Map { board: vec![1, 2, 3, 4, 5, 6, 7, 8, 0], size: 3 });
+		assert_eq!(s.zero.to_1d(3), 8);
 	}
 
 	#[test]
 	fn state_build_child() {
-		let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8], 3);
+		let s = State::from(Map { board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8], size: 3 });
 		let s2 = s.build_child(&Point { x: 0, y: 0 }, 3);
-		assert_eq!(s2.pos.to_1d(3), 0);
-		assert_eq!(s2.board[s2.pos.to_1d(3) as usize], 0);
+		assert_eq!(s2.zero.to_1d(3), 0);
+		assert_eq!(s2.board[s2.zero.to_1d(3) as usize], 0);
 		assert_eq!(s2.board[7], 1);
 	}
 
 	#[test]
 	#[should_panic]
 	fn state_build_child_panic() {
-		let s = State::build_state(vec![1, 2, 3, 4, 5, 6, 7, 0, 8], 3);
+		let s = State::from(Map { board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8], size: 3 });
 		let _s2 = s.build_child(&Point { x: 10, y: 10 }, 3);
 	}
 
