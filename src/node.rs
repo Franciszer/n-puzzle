@@ -11,7 +11,7 @@ pub struct Node {
 
 impl Ord for Node {
 	fn cmp(&self, other: &Self) -> Ordering {
-		(other.score + other.moves).cmp(&(self.score + self.moves))
+		self.score.cmp(&other.score).reverse()
 	}
 }
 
