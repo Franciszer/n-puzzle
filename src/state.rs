@@ -85,7 +85,7 @@ pub struct State {
 }
 
 impl State {
-	pub fn new(board: Vec<u16>, zero: Point, size: u16) -> State {
+	pub fn new(board: Vec<u16>, zero: Point, _size: u16) -> State {
 		State { board, zero }
 	}
 

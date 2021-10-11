@@ -1,16 +1,19 @@
-use std::collections::{BinaryHeap, HashMap};
+// use std::collections::{BinaryHeap, HashMap};
 use crate::map::Map;
-use crate::node::Node;
+// use crate::node::Node;
 use crate::state::Point;
 use crate::state::State;
 
 pub struct Solver {
+	solved_map: Map,
+	// target positions indexed by value
 	solved_table: Vec<Point>,
 	size: u16,
 }
 
 impl Solver {
-	pub fn new(solved_map: &Map) -> Solver {
+	pub fn new(solved_map: Map) -> Solver {
+
 		let mut solved_table: Vec<Point> =
 			vec![Point::from_1d(0, solved_map.size); solved_map.board.len()];
 
@@ -19,9 +22,11 @@ impl Solver {
 			solved_table[*item as usize] = p;
 		}
 
+		let size = solved_map.size;
 		Solver {
+			solved_map,
 			solved_table,
-			size: solved_map.size,
+			size,
 		}
 	}
 
@@ -38,7 +43,7 @@ impl Solver {
 		score
 	}
 
-	fn get_inv_count(&self, board: &Vec<u16>) -> u16 {
+	fn get_inv_count(board: &Vec<u16>) -> u16 {
 		let mut count: u16 = 0;
 
 		for i in 0..(board.len() - 1) {
@@ -56,22 +61,18 @@ impl Solver {
 	}
 
 	pub fn is_solvable(&self, map: &Map) -> bool {
-		let inv_count = self.get_inv_count(&map.board);
+		let inv_count = Solver::get_inv_count(&map.board);
+		let solved_inv_count = Solver::get_inv_count(&self.solved_map.board);
 
-		if map.size.is_odd() {
-			inv_count.is_even()
-		} else {
-			let pos: u16 = map.board.iter().position(|&r| r == 0).unwrap() as u16;
-			if pos.is_odd() {
-				inv_count.is_even()
-			} else {
-				inv_count.is_odd()
-			}
+		// one has to be even and the other one has to be odd
+		if inv_count.is_even() != solved_inv_count.is_even() {
+			return false
 		}
+		return true;
 	}
 
-	pub fn solve(&self, map: Map) {
-		let root = State::from(map);
+	pub fn solve(&self, _map: Map) {
+		// let root = State::from(map);
 		// TODO: Needs Ord
 		// let mut queue: BinaryHeap<Node> = BinaryHeap::new();
 		// queue.push(Node {
