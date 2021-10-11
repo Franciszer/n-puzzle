@@ -1,5 +1,5 @@
-use crate::solver::Solver;
 use crate::map::{gen_solved_map, Map};
+use crate::solver::Solver;
 
 pub struct Executor {
 	map: Map,

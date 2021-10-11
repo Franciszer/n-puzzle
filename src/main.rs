@@ -1,12 +1,11 @@
-#![allow(dead_code)] // Remove when project is somewhat finished
 use executor::Executor;
 use std::error::Error;
 
-mod solver;
 mod executor;
 mod map;
 mod node;
 mod parser;
+mod solver;
 mod state;
 
 fn main() -> Result<(), Box<dyn Error>> {
