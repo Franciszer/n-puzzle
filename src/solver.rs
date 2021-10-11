@@ -8,12 +8,13 @@ use std::hash::{Hash, Hasher};
 use std::time::{Duration, Instant};
 
 pub struct Solver {
+	solved_map: Map,
 	solved_table: Vec<Point>,
 	size: u16,
 }
 
 impl Solver {
-	pub fn new(solved_map: &Map) -> Solver {
+	pub fn new(solved_map: Map) -> Solver {
 		let mut solved_table: Vec<Point> =
 			vec![Point::from_1d(0, solved_map.size); solved_map.board.len()];
 
@@ -22,9 +23,11 @@ impl Solver {
 			solved_table[*item as usize] = p;
 		}
 
+		let size = solved_map.size;
 		Solver {
+			solved_map,
 			solved_table,
-			size: solved_map.size,
+			size: size,
 		}
 	}
 
@@ -58,21 +61,15 @@ impl Solver {
 		count
 	}
 
-	#[allow(unreachable_code, unused_variables)]
 	pub fn is_solvable(&self, map: &Map) -> bool {
-		return true;
 		let inv_count = self.get_inv_count(&map.board);
+		let solved_inv_count = self.get_inv_count(&self.solved_map.board);
 
-		if map.size.is_odd() {
-			inv_count.is_even()
-		} else {
-			let pos: u16 = map.board.iter().position(|&r| r == 0).unwrap() as u16;
-			if pos.is_odd() {
-				inv_count.is_even()
-			} else {
-				inv_count.is_odd()
-			}
+		if inv_count.is_even() == solved_inv_count.is_even() {
+			return true
 		}
+
+		false
 	}
 
 	pub fn solve(&self, map: Map) {
