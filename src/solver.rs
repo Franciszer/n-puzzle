@@ -2,9 +2,7 @@ use crate::map::Map;
 use crate::node::Node;
 use crate::state::Point;
 use crate::state::State;
-use ahash::AHasher;
 use std::collections::{BinaryHeap, HashSet};
-use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 // use std::time::{Duration, Instant};
 
@@ -28,7 +26,7 @@ impl Solver {
 		Solver {
 			solved_map,
 			solved_table,
-			size: size,
+			size,
 		}
 	}
 
@@ -89,6 +87,8 @@ impl Solver {
 		transpose_table.insert(Rc::clone(&root_node));
 		priority_queue.push(Rc::clone(&root_node));
 
+		let mut i = 0;
+		let mut last_iter = 0;
 		loop {
 			let current = priority_queue.pop().unwrap();
 			// println!("{:?}", current.state);
@@ -96,6 +96,14 @@ impl Solver {
 			let children = current.state.gen_children(size);
 
 			for child in children {
+				if last_iter == 0 {
+					println!("ITER {}\nscore: {}\n{}", i, current.score, Map {
+						board: current.state.board.clone(),
+						size: self.size
+					});
+				}
+				i += 1;
+				last_iter = i % 1000000;
 				if let Some(child) = child {
 					let ptr = Rc::new(Node {
 						parent: Some(Rc::clone(&current)),
@@ -112,6 +120,7 @@ impl Solver {
 								size: self.size,
 								board: ptr.state.board.clone()
 							});
+							println!("{} iterations", i);
 							return
 						}
 						priority_queue.push(Rc::clone(&ptr));
@@ -139,11 +148,6 @@ impl Oddness for std::primitive::u16 {
 	}
 }
 
-fn hash<T: Hash>(item: &T) -> u64 {
-	let mut hasher = AHasher::default();
-	item.hash(&mut hasher);
-	hasher.finish()
-}
 
 #[cfg(test)]
 mod tests {
