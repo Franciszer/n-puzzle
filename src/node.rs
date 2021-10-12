@@ -1,12 +1,22 @@
 use std::cmp::Ordering;
+use crate::state::State;
+use std::rc::Rc;
+use nom::lib::std::hash::{Hash, Hasher};
 
+// #[derive(Hash)]
 pub struct Node {
-	pub parent: Option<usize>,
-	pub state: usize,
+	pub parent: Option<Rc<Node>>,
+	pub state: State,
 	// cost
 	pub moves: u16,
 	// heuristic score
 	pub score: u16,
+}
+
+impl Hash for Node {
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.state.hash(state);
+	}
 }
 
 impl Ord for Node {

@@ -3,9 +3,10 @@ use crate::node::Node;
 use crate::state::Point;
 use crate::state::State;
 use ahash::AHasher;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashSet};
 use std::hash::{Hash, Hasher};
-use std::time::{Duration, Instant};
+use std::rc::Rc;
+// use std::time::{Duration, Instant};
 
 pub struct Solver {
 	solved_map: Map,
@@ -66,7 +67,7 @@ impl Solver {
 		let solved_inv_count = self.get_inv_count(&self.solved_map.board);
 
 		if inv_count.is_even() == solved_inv_count.is_even() {
-			return true
+			return true;
 		}
 
 		false
@@ -74,69 +75,46 @@ impl Solver {
 
 	pub fn solve(&self, map: Map) {
 		let size = map.size;
+		let mut transpose_table = HashSet::new();
+		let mut priority_queue = BinaryHeap::new();
+
 		let root = State::from(map);
-		// TODO: Tune capities
-		let mut vector: Vec<State> = Vec::with_capacity(2 ^ 17);
-		let mut hashes: Vec<u64> = Vec::with_capacity(2 ^ 17);
-		let mut queue: BinaryHeap<Node> = BinaryHeap::with_capacity(2 ^ 15);
-		let mut discraded: Vec<Node> = Vec::with_capacity(2 ^ 16);
-		let mut best_score = self.compute_score(&root);
-
-		queue.push(Node {
+		let root_node = Rc::new(Node {
 			parent: None,
-			state: 0,
+			score: self.compute_score(&root),
+			state: root,
 			moves: 0,
-			score: best_score,
 		});
-		hashes.push(hash(&root.board));
-		vector.push(root);
 
-		let mut i = 0;
-		let mut last_print = Instant::now() - Duration::from_secs(10);
+		transpose_table.insert(Rc::clone(&root_node));
+		priority_queue.push(Rc::clone(&root_node));
 
-		'exit: loop {
-			let node_index = discraded.len();
-			discraded.push(queue.pop().unwrap());
-			let node = discraded.last().unwrap();
-			for child in vector[node.state].gen_children(size) {
-				if let Some(state) = child {
-					i += 1;
-					if Instant::now().duration_since(last_print) > Duration::from_secs(3) {
-						println!(
-							"Vec size: {}, iteration: {}, score: {}",
-							vector.len(),
-							i,
-							best_score
-						);
-						last_print = Instant::now();
-					}
-					let hash = hash(&state);
-					if !hashes.contains(&hash) {
-						let score = self.compute_score(&state);
-						if score < best_score {
-							best_score = score
+		loop {
+			let current = priority_queue.pop().unwrap();
+			// println!("{:?}", current.state);
+
+			let children = current.state.gen_children(size);
+
+			for child in children {
+				if let Some(child) = child {
+					let ptr = Rc::new(Node {
+						parent: Some(Rc::clone(&current)),
+						score: self.compute_score(&child),
+						state: child,
+						moves: current.moves + 1,
+
+					});
+					let inserted = transpose_table.insert(Rc::clone(&ptr));
+					if inserted == true {
+						if ptr.score == 0 {
+							println!("OK");
+							println!("{}", Map {
+								size: self.size,
+								board: ptr.state.board.clone()
+							});
+							return
 						}
-						let child_node = Node {
-							parent: Some(node_index),
-							moves: node.moves + 1,
-							score,
-							state: vector.len() - 1,
-						};
-						if child_node.score == 0 {
-							println!(
-								"vec: {}, hashes: {}, queue: {}, discarded: {}",
-								vector.capacity(),
-								hashes.capacity(),
-								queue.capacity(),
-								discraded.capacity()
-							);
-							println!("Found solution in {} moves", child_node.moves);
-							break 'exit;
-						}
-
-						vector.push(state);
-						hashes.push(hash);
-						queue.push(child_node);
+						priority_queue.push(Rc::clone(&ptr));
 					}
 				}
 			}
@@ -175,7 +153,7 @@ mod tests {
 	#[test]
 	fn evaluator_build() {
 		let solved = gen_solved_map(5);
-		let e = Solver::new(&solved);
+		let e = Solver::new(solved.clone());
 		println!("{:?}", solved);
 		println!("len:{} {:?}", e.solved_table.len(), e.solved_table);
 	}
@@ -183,7 +161,7 @@ mod tests {
 	#[test]
 	fn evaluate_unsolved() {
 		let mut solved = gen_solved_map(5);
-		let e = Solver::new(&solved);
+		let e = Solver::new(solved.clone());
 
 		println!("{:?}", solved);
 		solved.board.swap(0, 1);
@@ -191,7 +169,7 @@ mod tests {
 		assert_eq!(e.compute_score(&s), 2);
 
 		let mut solved = gen_solved_map(5);
-		let e = Solver::new(&solved);
+		let e = Solver::new(solved.clone());
 
 		println!("{:?}", solved);
 		solved.board.swap(0, 1);
@@ -205,7 +183,7 @@ mod tests {
 	fn evaluate_solved() {
 		for i in 3..16 {
 			let solved = gen_solved_map(i);
-			let e = Solver::new(&solved);
+			let e = Solver::new(solved.clone());
 			let s = State::from(solved);
 			assert_eq!(e.compute_score(&s), 0);
 		}
