@@ -8,7 +8,7 @@ pub struct Point {
 }
 
 impl Point {
-	fn to_1d(&self, size: u16) -> u16 {
+	pub(crate) fn to_1d(&self, size: u16) -> u16 {
 		self.x * size + self.y
 	}
 

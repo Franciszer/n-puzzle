@@ -32,13 +32,19 @@ impl Solver {
 
 	/// Computes the score of state using the manhatthan distance
 	/// Lower is better
-	fn compute_score(&self, state: &State) -> u16 {
+	pub fn compute_score(&self, state: &State, size: u16) -> u16 {
 		let mut score: u16 = 0;
-		for (i, item) in state.board.iter().enumerate() {
-			score += Point::manhatthan_dist(
-				&Point::from_1d(i as u16, self.size),
-				&self.solved_table[*item as usize],
+		for correct_value in 1..((size - 1) * 4) {
+			let correct_position = &self.solved_table[correct_value as usize];
+			let current_position = Point::from_1d(
+				state
+					.board
+					.iter()
+					.position(|&v| v == correct_value)
+					.unwrap() as u16,
+				size,
 			);
+			score += Point::manhatthan_dist(&current_position, correct_position);
 		}
 		score
 	}
@@ -81,7 +87,7 @@ impl Solver {
 		let size = map.size;
 		let root = Rc::new(State::from(map));
 
-		let mut best_score = self.compute_score(&root);
+		let mut best_score = self.compute_score(&root, size);
 		let root_node = Node {
 			parent: None,
 			state: root.clone(),
@@ -113,12 +119,19 @@ impl Solver {
 			if Instant::now().duration_since(last_print) > Duration::from_secs(1) {
 				last_print = Instant::now();
 				print!(
-					"\rDistinct: {:9}, Iteration: {:9}, Score: {:3}",
+					"Distinct: {:9}, Iteration: {:9}, Score: {:3}\n",
 					states_set.len(),
 					i,
 					best_score
 				);
-				let _ = io::stdout().flush();
+				let index = queue.peek().unwrap().index;
+				println!(
+					"{}",
+					Map {
+						size,
+						board: nodes[index].state.board.clone()
+					}
+				);
 			}
 
 			// Todo unchecked index
@@ -127,12 +140,19 @@ impl Solver {
 					let state = Rc::new(state);
 					i += 1;
 					if states_set.insert(state.clone()) {
-						let score = self.compute_score(&state);
+						let score = self.compute_score(&state, size);
 						if score == 0 {
-							println!(
-								"\nFound solution in {} moves, with {} iterations !",
+							print!(
+								"Found solution in {} moves, with {} iterations !\n",
 								moves + 1,
 								i
+							);
+							println!(
+								"{:?}",
+								Map {
+									size,
+									board: state.board.clone()
+								}
 							);
 							break 'exit;
 						}
