@@ -5,13 +5,13 @@ use std::rc::Rc;
 pub struct Node {
 	pub parent: Option<usize>,
 	pub state: Rc<State>,
-	// cost
 	pub moves: u16,
 }
 
 pub struct ScoreAndIndex {
-	pub score: u16,
 	pub index: usize,
+	pub score: u16,
+	pub moves: u16,
 }
 
 impl Eq for ScoreAndIndex {}
@@ -30,6 +30,8 @@ impl PartialOrd<Self> for ScoreAndIndex {
 
 impl Ord for ScoreAndIndex {
 	fn cmp(&self, other: &Self) -> Ordering {
-		self.score.cmp(&other.score).reverse()
+		(self.score * 100 + self.moves)
+			.cmp(&(other.score * 100 + self.moves))
+			.reverse()
 	}
 }

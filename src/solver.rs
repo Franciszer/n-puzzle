@@ -4,6 +4,8 @@ use crate::state::Point;
 use crate::state::State;
 use ahash::AHashSet;
 use std::collections::BinaryHeap;
+use std::io;
+use std::io::Write;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -94,10 +96,11 @@ impl Solver {
 		queue.push(ScoreAndIndex {
 			score: best_score,
 			index: 0,
+			moves: 0,
 		});
 		states_set.insert(root);
 
-		let mut last_print = Instant::now();
+		let mut last_print = Instant::now() - Duration::from_secs(10);
 
 		let mut i = 0;
 		'exit: loop {
@@ -107,14 +110,15 @@ impl Solver {
 			let state = nodes[node_index].state.clone();
 			let moves = nodes[node_index].moves;
 
-			if Instant::now().duration_since(last_print) > Duration::from_secs(3) {
+			if Instant::now().duration_since(last_print) > Duration::from_secs(1) {
 				last_print = Instant::now();
-				println!(
-					"Distinct: {}, Iteration: {}, Score: {}",
+				print!(
+					"\rDistinct: {:9}, Iteration: {:9}, Score: {:3}",
 					states_set.len(),
 					i,
 					best_score
 				);
+				let _ = io::stdout().flush();
 			}
 
 			// Todo unchecked index
@@ -126,7 +130,7 @@ impl Solver {
 						let score = self.compute_score(&state);
 						if score == 0 {
 							println!(
-								"Found solution in {} moves, with {} iterations !",
+								"\nFound solution in {} moves, with {} iterations !",
 								moves + 1,
 								i
 							);
@@ -143,6 +147,7 @@ impl Solver {
 						queue.push(ScoreAndIndex {
 							index: nodes.len(),
 							score,
+							moves: moves + 1,
 						});
 						nodes.push(new_node);
 					}
