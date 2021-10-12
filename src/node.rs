@@ -8,10 +8,17 @@ pub struct Node {
 	pub moves: u16,
 }
 
+#[cfg(feature = "use_move")]
 pub struct ScoreAndIndex {
 	pub index: usize,
 	pub score: u16,
 	pub moves: u16,
+}
+
+#[cfg(not(feature = "use_move"))]
+pub struct ScoreAndIndex {
+	pub index: usize,
+	pub score: u16,
 }
 
 impl Eq for ScoreAndIndex {}
@@ -29,9 +36,14 @@ impl PartialOrd<Self> for ScoreAndIndex {
 }
 
 impl Ord for ScoreAndIndex {
+	#[cfg(feature = "use_move")]
 	fn cmp(&self, other: &Self) -> Ordering {
 		(self.score * 100 + self.moves)
 			.cmp(&(other.score * 100 + self.moves))
 			.reverse()
+	}
+	#[cfg(not(feature = "use_move"))]
+	fn cmp(&self, other: &Self) -> Ordering {
+		self.score.cmp(&other.score).reverse()
 	}
 }

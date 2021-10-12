@@ -34,17 +34,13 @@ impl Solver {
 	/// Lower is better
 	pub fn compute_score(&self, state: &State, size: u16) -> u16 {
 		let mut score: u16 = 0;
-		for correct_value in 1..((size - 1) * 4) {
-			let correct_position = &self.solved_table[correct_value as usize];
-			let current_position = Point::from_1d(
-				state
-					.board
-					.iter()
-					.position(|&v| v == correct_value)
-					.unwrap() as u16,
-				size,
+		for (i, item) in state.board.iter().enumerate() {
+			let point = Point::from_1d(i as u16, self.size);
+			let dist = Point::manhatthan_dist(
+				&point,
+				&self.solved_table[*item as usize],
 			);
-			score += Point::manhatthan_dist(&current_position, correct_position);
+			score += dist * (size - point.x) * (size - point.y);
 		}
 		score
 	}
@@ -102,11 +98,12 @@ impl Solver {
 		queue.push(ScoreAndIndex {
 			score: best_score,
 			index: 0,
+			#[cfg(feature = "use_move")]
 			moves: 0,
 		});
 		states_set.insert(root);
 
-		let mut last_print = Instant::now() - Duration::from_secs(10);
+		let mut last_print = Instant::now();
 
 		let mut i = 0;
 		'exit: loop {
@@ -167,6 +164,7 @@ impl Solver {
 						queue.push(ScoreAndIndex {
 							index: nodes.len(),
 							score,
+							#[cfg(feature = "use_move")]
 							moves: moves + 1,
 						});
 						nodes.push(new_node);

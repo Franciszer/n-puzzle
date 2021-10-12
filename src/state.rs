@@ -3,8 +3,8 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 pub struct Point {
-	x: u16,
-	y: u16,
+	pub x: u16,
+	pub y: u16,
 }
 
 impl Point {
