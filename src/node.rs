@@ -1,8 +1,10 @@
+use crate::state::State;
 use std::cmp::Ordering;
+use std::rc::Rc;
 
 pub struct Node {
 	pub parent: Option<usize>,
-	pub state: usize,
+	pub state: Rc<State>,
 	// cost
 	pub moves: u16,
 }

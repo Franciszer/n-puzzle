@@ -1,10 +1,11 @@
-use std::collections::BinaryHeap;
-use std::time::{Duration, Instant};
-use ahash::AHashSet;
 use crate::map::Map;
 use crate::node::{Node, ScoreAndIndex};
 use crate::state::Point;
 use crate::state::State;
+use ahash::AHashSet;
+use std::collections::BinaryHeap;
+use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 pub struct Solver {
 	solved_table: Vec<Point>,
@@ -76,46 +77,59 @@ impl Solver {
 
 	pub fn solve(&self, map: Map) {
 		let size = map.size;
-		let root = State::from(map);
+		let root = Rc::new(State::from(map));
 
 		let mut best_score = self.compute_score(&root);
 		let root_node = Node {
 			parent: None,
-			state: 0,
+			state: root.clone(),
 			moves: 0,
 		};
 
-		let mut states = Vec::new();
 		let mut nodes = Vec::new();
-		let mut states_set = AHashSet::new();
+		let mut states_set: AHashSet<Rc<State>> = AHashSet::new();
 		let mut queue: BinaryHeap<ScoreAndIndex> = BinaryHeap::new();
 
 		nodes.push(root_node);
-		queue.push(ScoreAndIndex { score: best_score, index: 0 });
-		states_set.insert(root.clone());
-		states.push(root);
+		queue.push(ScoreAndIndex {
+			score: best_score,
+			index: 0,
+		});
+		states_set.insert(root);
 
 		let mut last_print = Instant::now();
 
 		let mut i = 0;
 		'exit: loop {
-			let ScoreAndIndex { index: node_index, .. } = queue.pop().unwrap();
-			let Node { state, moves, .. } = nodes[node_index];
+			let ScoreAndIndex {
+				index: node_index, ..
+			} = queue.pop().unwrap();
+			let state = nodes[node_index].state.clone();
+			let moves = nodes[node_index].moves;
 
 			if Instant::now().duration_since(last_print) > Duration::from_secs(3) {
 				last_print = Instant::now();
-				println!("Distinct: {}, Iteration: {}, Score: {}", states.len(), i, best_score);
+				println!(
+					"Distinct: {}, Iteration: {}, Score: {}",
+					states_set.len(),
+					i,
+					best_score
+				);
 			}
 
 			// Todo unchecked index
-			for child in states[state].gen_children(size) {
+			for child in state.gen_children(size) {
 				if let Some(state) = child {
+					let state = Rc::new(state);
 					i += 1;
-					if !states_set.contains(&state) {
-						states_set.insert(state.clone());
+					if states_set.insert(state.clone()) {
 						let score = self.compute_score(&state);
 						if score == 0 {
-							println!("Found solution in {} moves, with {} iterations !", moves + 1, i);
+							println!(
+								"Found solution in {} moves, with {} iterations !",
+								moves + 1,
+								i
+							);
 							break 'exit;
 						}
 						if score < best_score {
@@ -123,11 +137,13 @@ impl Solver {
 						}
 						let new_node = Node {
 							parent: Some(node_index),
-							state: states.len(),
+							state,
 							moves: moves + 1,
 						};
-						states.push(state);
-						queue.push(ScoreAndIndex { index: nodes.len(), score });
+						queue.push(ScoreAndIndex {
+							index: nodes.len(),
+							score,
+						});
 						nodes.push(new_node);
 					}
 				}
