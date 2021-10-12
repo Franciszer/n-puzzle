@@ -5,26 +5,29 @@ pub struct Node {
 	pub state: usize,
 	// cost
 	pub moves: u16,
-	// heuristic score
+}
+
+pub struct ScoreAndIndex {
 	pub score: u16,
+	pub index: usize,
 }
 
-impl Ord for Node {
-	fn cmp(&self, other: &Self) -> Ordering {
-		self.score.cmp(&other.score).reverse()
-	}
-}
+impl Eq for ScoreAndIndex {}
 
-impl Eq for Node {}
-
-impl PartialEq<Self> for Node {
+impl PartialEq<Self> for ScoreAndIndex {
 	fn eq(&self, other: &Self) -> bool {
-		self.state == other.state
+		self.score == other.score && self.index == other.index
 	}
 }
 
-impl PartialOrd<Self> for Node {
+impl PartialOrd<Self> for ScoreAndIndex {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
 		Some(self.cmp(&other))
+	}
+}
+
+impl Ord for ScoreAndIndex {
+	fn cmp(&self, other: &Self) -> Ordering {
+		self.score.cmp(&other.score).reverse()
 	}
 }

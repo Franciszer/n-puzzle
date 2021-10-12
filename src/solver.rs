@@ -1,11 +1,10 @@
+use std::collections::BinaryHeap;
+use std::time::{Duration, Instant};
+use ahash::AHashSet;
 use crate::map::Map;
-use crate::node::Node;
+use crate::node::{Node, ScoreAndIndex};
 use crate::state::Point;
 use crate::state::State;
-use ahash::AHasher;
-use std::collections::BinaryHeap;
-use std::hash::{Hash, Hasher};
-use std::time::{Duration, Instant};
 
 pub struct Solver {
 	solved_table: Vec<Point>,
@@ -78,68 +77,58 @@ impl Solver {
 	pub fn solve(&self, map: Map) {
 		let size = map.size;
 		let root = State::from(map);
-		// TODO: Tune capities
-		let mut vector: Vec<State> = Vec::with_capacity(2 ^ 17);
-		let mut hashes: Vec<u64> = Vec::with_capacity(2 ^ 17);
-		let mut queue: BinaryHeap<Node> = BinaryHeap::with_capacity(2 ^ 15);
-		let mut discraded: Vec<Node> = Vec::with_capacity(2 ^ 16);
-		let mut best_score = self.compute_score(&root);
 
-		queue.push(Node {
+		let mut best_score = self.compute_score(&root);
+		let root_node = Node {
 			parent: None,
 			state: 0,
 			moves: 0,
-			score: best_score,
-		});
-		hashes.push(hash(&root.board));
-		vector.push(root);
+		};
+
+		let mut states = Vec::new();
+		let mut nodes = Vec::new();
+		let mut states_set = AHashSet::new();
+		let mut queue: BinaryHeap<ScoreAndIndex> = BinaryHeap::new();
+
+		nodes.push(root_node);
+		queue.push(ScoreAndIndex { score: best_score, index: 0 });
+		states_set.insert(root.clone());
+		states.push(root);
+
+		let mut last_print = Instant::now();
 
 		let mut i = 0;
-		let mut last_print = Instant::now() - Duration::from_secs(10);
-
 		'exit: loop {
-			let node_index = discraded.len();
-			discraded.push(queue.pop().unwrap());
-			let node = discraded.last().unwrap();
-			for child in vector[node.state].gen_children(size) {
+			let ScoreAndIndex { index: node_index, .. } = queue.pop().unwrap();
+			let Node { state, moves, .. } = nodes[node_index];
+
+			if Instant::now().duration_since(last_print) > Duration::from_secs(3) {
+				last_print = Instant::now();
+				println!("Distinct: {}, Iteration: {}, Score: {}", states.len(), i, best_score);
+			}
+
+			// Todo unchecked index
+			for child in states[state].gen_children(size) {
 				if let Some(state) = child {
 					i += 1;
-					if Instant::now().duration_since(last_print) > Duration::from_secs(3) {
-						println!(
-							"Vec size: {}, iteration: {}, score: {}",
-							vector.len(),
-							i,
-							best_score
-						);
-						last_print = Instant::now();
-					}
-					let hash = hash(&state);
-					if !hashes.contains(&hash) {
+					if !states_set.contains(&state) {
+						states_set.insert(state.clone());
 						let score = self.compute_score(&state);
-						if score < best_score {
-							best_score = score
-						}
-						let child_node = Node {
-							parent: Some(node_index),
-							moves: node.moves + 1,
-							score,
-							state: vector.len() - 1,
-						};
-						if child_node.score == 0 {
-							println!(
-								"vec: {}, hashes: {}, queue: {}, discarded: {}",
-								vector.capacity(),
-								hashes.capacity(),
-								queue.capacity(),
-								discraded.capacity()
-							);
-							println!("Found solution in {} moves", child_node.moves);
+						if score == 0 {
+							println!("Found solution in {} moves, with {} iterations !", moves + 1, i);
 							break 'exit;
 						}
-
-						vector.push(state);
-						hashes.push(hash);
-						queue.push(child_node);
+						if score < best_score {
+							best_score = score;
+						}
+						let new_node = Node {
+							parent: Some(node_index),
+							state: states.len(),
+							moves: moves + 1,
+						};
+						states.push(state);
+						queue.push(ScoreAndIndex { index: nodes.len(), score });
+						nodes.push(new_node);
 					}
 				}
 			}
@@ -162,12 +151,6 @@ impl Oddness for std::primitive::u16 {
 	fn is_even(&self) -> bool {
 		self & 1 == 0
 	}
-}
-
-fn hash<T: Hash>(item: &T) -> u64 {
-	let mut hasher = AHasher::default();
-	item.hash(&mut hasher);
-	hasher.finish()
 }
 
 #[cfg(test)]

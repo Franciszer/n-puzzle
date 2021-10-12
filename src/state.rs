@@ -78,6 +78,7 @@ impl Point {
 	}
 }
 
+#[derive(Clone)]
 pub struct State {
 	// state of the board
 	pub board: Vec<u16>,

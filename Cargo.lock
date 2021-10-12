@@ -54,7 +54,6 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "nom",
- "once_cell",
 ]
 
 [[package]]
