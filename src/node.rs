@@ -8,6 +8,23 @@ pub struct Node {
 	pub moves: u16,
 }
 
+impl Node {
+	pub fn collect_parents(&self, nodes: &Vec<Self>) -> Vec<Rc<State>> {
+		let mut states = Vec::new();
+		let mut current_node: &Self = self;
+		loop {
+			states.push(current_node.state.clone());
+			current_node = match current_node.parent {
+				Some(next_node) => &nodes[next_node],
+				None => {
+					states.reverse();
+					return states;
+				}
+			}
+		}
+	}
+}
+
 #[cfg(feature = "use_move")]
 pub struct ScoreAndIndex {
 	pub index: usize,
@@ -38,9 +55,13 @@ impl PartialOrd<Self> for ScoreAndIndex {
 impl Ord for ScoreAndIndex {
 	#[cfg(feature = "use_move")]
 	fn cmp(&self, other: &Self) -> Ordering {
-		(self.score * 100 + self.moves)
-			.cmp(&(other.score * 100 + self.moves))
-			.reverse()
+		let mut self_score: usize = self.moves as usize;
+		let mut other_score: usize = self.moves as usize;
+		self_score *= 100;
+		other_score *= 100;
+		self_score += self.score as usize;
+		other_score += other.score as usize;
+		other_score.cmp(&self_score)
 	}
 	#[cfg(not(feature = "use_move"))]
 	fn cmp(&self, other: &Self) -> Ordering {

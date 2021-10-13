@@ -4,14 +4,36 @@ use crate::state::Point;
 use crate::state::State;
 use ahash::AHashSet;
 use std::collections::BinaryHeap;
-use std::io;
-use std::io::Write;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 pub struct Solver {
 	solved_table: Vec<Point>,
 	size: u16,
+}
+
+pub struct Solution<T> {
+	pub states: Vec<T>,
+	pub size: u16,
+	// Number of states opened
+	pub time: usize,
+	// Number of states stored
+	pub memory: usize,
+}
+
+impl From<Solution<Rc<State>>> for Solution<State> {
+	fn from(to_unwrap: Solution<Rc<State>>) -> Self {
+		Self {
+			states: to_unwrap
+				.states
+				.into_iter()
+				.map(|e| Rc::<State>::try_unwrap(e).unwrap())
+				.collect(),
+			size: to_unwrap.size,
+			time: to_unwrap.time,
+			memory: to_unwrap.memory,
+		}
+	}
 }
 
 impl Solver {
@@ -32,7 +54,7 @@ impl Solver {
 
 	/// Computes the score of state using the manhatthan distance
 	/// Lower is better
-	pub fn compute_score(&self, state: &State, size: u16) -> u16 {
+	pub fn compute_score(&self, state: &State) -> u16 {
 		let mut score: u16 = 0;
 		for (i, item) in state.board.iter().enumerate() {
 			let point = Point::from_1d(i as u16, self.size);
@@ -76,11 +98,11 @@ impl Solver {
 		}
 	}
 
-	pub fn solve(&self, map: Map) {
+	pub fn solve(&self, map: Map) -> Solution<Rc<State>> {
 		let size = map.size;
 		let root = Rc::new(State::from(map));
 
-		let mut best_score = self.compute_score(&root, size);
+		let mut best_score = self.compute_score(&root);
 		let root_node = Node {
 			parent: None,
 			state: root.clone(),
@@ -102,8 +124,8 @@ impl Solver {
 
 		let mut last_print = Instant::now();
 
-		let mut i = 0;
-		'exit: loop {
+		let mut i: usize = 0;
+		loop {
 			let ScoreAndIndex {
 				index: node_index, ..
 			} = queue.pop().unwrap();
@@ -128,42 +150,34 @@ impl Solver {
 				);
 			}
 
-			// Todo unchecked index
 			for child in state.gen_children(size) {
 				if let Some(state) = child {
 					let state = Rc::new(state);
 					i += 1;
 					if states_set.insert(state.clone()) {
-						let score = self.compute_score(&state, size);
-						if score == 0 {
-							print!(
-								"Found solution in {} moves, with {} iterations !\n",
-								moves + 1,
-								i
-							);
-							println!(
-								"{:?}",
-								Map {
-									size,
-									board: state.board.clone()
-								}
-							);
-							break 'exit;
-						}
-						if score < best_score {
-							best_score = score;
-						}
+						let score = self.compute_score(&state);
 						let new_node = Node {
 							parent: Some(node_index),
 							state,
 							moves: moves + 1,
 						};
+						if score == 0 {
+							return Solution {
+								states: new_node.collect_parents(&nodes),
+								size,
+								time: i,
+								memory: states_set.len(),
+							};
+						}
 						queue.push(ScoreAndIndex {
 							index: nodes.len(),
 							score,
 							#[cfg(feature = "use_move")]
 							moves: moves + 1,
 						});
+						if score < best_score {
+							best_score = score;
+						}
 						nodes.push(new_node);
 					}
 				}

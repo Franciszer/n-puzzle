@@ -1,4 +1,5 @@
-use crate::map::Map;
+use crate::map::{fmt_board, Map};
+use std::fmt::{Debug, Display, Error, Formatter};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
@@ -84,6 +85,21 @@ pub struct State {
 	pub board: Vec<u16>,
 	// position of 0 on board
 	zero: Point,
+}
+
+impl Display for State {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match f.width() {
+			Some(width) => fmt_board(&self.board, width, f),
+			None => Err(Error),
+		}
+	}
+}
+
+impl Debug for State {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		self.board.fmt(f)
+	}
 }
 
 impl State {

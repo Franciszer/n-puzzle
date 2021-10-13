@@ -18,6 +18,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let input = fs::read_to_string(filename)?;
 	let (_, (size, board)) = parser::parse_map(&input).or(Err("Unable to parse map !"))?;
 	let executor = Executor::new(parser::validate_map(size, board)?);
-	executor.run();
+	executor.run()?;
 	Ok(())
 }

@@ -6,29 +6,33 @@ pub struct Map {
 	pub board: Vec<u16>,
 }
 
+pub fn fmt_board(board: &Vec<u16>, size: usize, f: &mut Formatter<'_>) -> std::fmt::Result {
+	let width = match board.iter().max() {
+		Some(w) => w.to_string().len(),
+		None => return Ok(()),
+	};
+	for line in board.chunks_exact(size) {
+		for (i, e) in line.iter().enumerate() {
+			if i == size - 1 {
+				write!(f, "{:width$}", e, width = width)?;
+			} else {
+				write!(f, "{:width$} ", e, width = width)?;
+			}
+		}
+		f.write_str("\n")?;
+	}
+	Ok(())
+}
+
 impl Display for Map {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		let width = match self.board.iter().max() {
-			Some(w) => w.to_string().len(),
-			None => return Ok(()),
-		};
-		for line in self.board.chunks_exact(self.size as usize) {
-			for (i, e) in line.iter().enumerate() {
-				if i == self.size as usize - 1 {
-					write!(f, "{:width$}", e, width = width)?;
-				} else {
-					write!(f, "{:width$} ", e, width = width)?;
-				}
-			}
-			f.write_str("\n")?;
-		}
-		Ok(())
+		fmt_board(&self.board, self.size as usize, f)
 	}
 }
 
 impl Debug for Map {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self)
+		fmt_board(&self.board, self.size as usize, f)
 	}
 }
 
