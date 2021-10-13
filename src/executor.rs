@@ -3,11 +3,11 @@ use crate::node::{GreedyPriority, LinearPriority, UniformPriority};
 use crate::solver::Solver;
 
 use std::io::Write;
-use crate::heuristic::{HMannhathan, HHamming};
+use crate::heuristic::{Manhatthan, Hamming, Euclidian};
 
 pub struct Executor {
 	map: Map,
-	solver: Solver<HMannhathan>,
+	solver: Solver<Manhatthan>,
 }
 
 impl Executor {

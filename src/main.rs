@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let args: Vec<String> = env::args().collect();
 	let filename: &str = match args.get(1) {
 		Some(s) => s,
-		None => "./maps/4x4.map",
+		None => "./maps/3x3.map",
 	};
 	let input = fs::read_to_string(filename)?;
 	let (_, (size, board)) = parser::parse_map(&input).or(Err("Unable to parse map !"))?;
