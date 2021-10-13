@@ -64,19 +64,6 @@ impl Point {
 		}
 	}
 
-	pub fn manhatthan_dist(p1: &Point, p2: &Point) -> u16 {
-		let x_dist = match p1.x > p2.x {
-			true => p1.x - p2.x,
-			false => p2.x - p1.x,
-		};
-
-		let y_dist = match p1.y > p2.y {
-			true => p1.y - p2.y,
-			false => p2.y - p1.y,
-		};
-
-		x_dist + y_dist
-	}
 }
 
 #[derive(Clone)]
@@ -265,26 +252,4 @@ mod tests {
 		let _s2 = s.build_child(&Point { x: 10, y: 10 }, 3);
 	}
 
-	#[test]
-	fn point_manhattan() {
-		let p1 = Point { x: 0, y: 0 };
-		let p2 = Point { x: 0, y: 0 };
-
-		assert_eq!(Point::manhatthan_dist(&p1, &p2), 0);
-
-		let p1 = Point { x: 0, y: 0 };
-		let p2 = Point { x: 1, y: 0 };
-
-		assert_eq!(Point::manhatthan_dist(&p1, &p2), 1);
-
-		let p1 = Point { x: 2, y: 5 };
-		let p2 = Point { x: 9, y: 10 };
-
-		assert_eq!(Point::manhatthan_dist(&p1, &p2), 12);
-
-		let p1 = Point { x: 19, y: 21 };
-		let p2 = Point { x: 2, y: 3 };
-
-		assert_eq!(Point::manhatthan_dist(&p1, &p2), 35);
-	}
 }
