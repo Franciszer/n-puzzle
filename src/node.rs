@@ -56,9 +56,7 @@ impl Ord for ScoreAndIndex {
 	#[cfg(feature = "use_move")]
 	fn cmp(&self, other: &Self) -> Ordering {
 		let mut self_score: usize = self.moves as usize;
-		let mut other_score: usize = self.moves as usize;
-		self_score *= 100;
-		other_score *= 100;
+		let mut other_score: usize = other.moves as usize;
 		self_score += self.score as usize;
 		other_score += other.score as usize;
 		other_score.cmp(&self_score)
