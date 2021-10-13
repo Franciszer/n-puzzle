@@ -55,10 +55,12 @@ impl PartialOrd<Self> for ScoreAndIndex {
 impl Ord for ScoreAndIndex {
 	#[cfg(feature = "use_move")]
 	fn cmp(&self, other: &Self) -> Ordering {
-		let mut self_score: usize = self.moves as usize;
-		let mut other_score: usize = other.moves as usize;
-		self_score += self.score as usize;
-		other_score += other.score as usize;
+		let mut self_score: u16 = self.moves;
+		let mut other_score: u16 = other.moves;
+		// self_score *= 2;
+		// other_score *= 2;
+		self_score += self.score;
+		other_score += other.score;
 		other_score.cmp(&self_score)
 	}
 	#[cfg(not(feature = "use_move"))]

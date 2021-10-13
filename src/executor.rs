@@ -19,15 +19,15 @@ impl Executor {
 	pub fn run(&self) -> std::io::Result<()> {
 		if self.solver.is_solvable(&self.map) {
 			let solution = self.solver.solve(self.map.clone());
+			for state in solution.states.iter() {
+				print!("{:size$}\n", state, size = self.map.size as usize);
+			}
 			print!(
 				"Found solution with {} moves, time complexity: {}, momery complexity: {}\n\n",
 				solution.states.len(),
 				solution.time,
 				solution.memory
 			);
-			for state in solution.states {
-				print!("{:size$}\n", state, size = self.map.size as usize);
-			}
 			std::io::stdout().flush()
 		} else {
 			print!("Puzzle is not solvable !");

@@ -132,10 +132,11 @@ impl Solver {
 			if Instant::now().duration_since(last_print) > Duration::from_secs(1) {
 				last_print = Instant::now();
 				print!(
-					"Distinct: {:9}, Iteration: {:9}, Score: {:3}\n",
+					"Distinct: {:9}, Iteration: {:9}, Score: {:3}, Moves: {}\n",
 					states_set.len(),
 					i,
-					best_score
+					best_score,
+					moves
 				);
 				let index = queue.peek().unwrap().index;
 				println!(
