@@ -25,44 +25,117 @@ impl Node {
 	}
 }
 
-#[cfg(feature = "use_move")]
-pub struct ScoreAndIndex {
-	pub index: usize,
-	pub score: u16,
-	pub moves: u16,
+pub trait Priority {
+	fn get_index(&self) -> usize;
+	fn new(index: usize, score: u16, moves: u16) -> Self;
 }
 
-#[cfg(not(feature = "use_move"))]
-pub struct ScoreAndIndex {
-	pub index: usize,
-	pub score: u16,
+pub struct LinearPriority {
+	index: usize,
+	score: u16,
+	moves: u16,
 }
 
-impl Eq for ScoreAndIndex {}
+pub struct UniformPriority {
+	index: usize,
+	moves: u16,
+}
 
-impl PartialEq<Self> for ScoreAndIndex {
+pub struct GreedyPriority {
+	index: usize,
+	score: u16,
+}
+
+impl Priority for LinearPriority {
+	fn get_index(&self) -> usize {
+		self.index
+	}
+
+	fn new(index: usize, score: u16, moves: u16) -> Self {
+		Self {
+			index,
+			score,
+			moves,
+		}
+	}
+}
+
+impl Priority for UniformPriority {
+	fn get_index(&self) -> usize {
+		self.index
+	}
+
+	fn new(index: usize, _: u16, moves: u16) -> Self {
+		Self { index, moves }
+	}
+}
+
+impl Priority for GreedyPriority {
+	fn get_index(&self) -> usize {
+		self.index
+	}
+
+	fn new(index: usize, score: u16, _: u16) -> Self {
+		Self { index, score }
+	}
+}
+
+impl Eq for LinearPriority {}
+
+impl PartialEq<Self> for LinearPriority {
 	fn eq(&self, other: &Self) -> bool {
 		self.score == other.score && self.index == other.index
 	}
 }
 
-impl PartialOrd<Self> for ScoreAndIndex {
+impl PartialOrd<Self> for LinearPriority {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
 		Some(self.cmp(&other))
 	}
 }
 
-impl Ord for ScoreAndIndex {
-	#[cfg(feature = "use_move")]
+impl Ord for LinearPriority {
 	fn cmp(&self, other: &Self) -> Ordering {
-		let mut self_score: usize = self.moves as usize;
-		let mut other_score: usize = other.moves as usize;
-		self_score += self.score as usize;
-		other_score += other.score as usize;
-		other_score.cmp(&self_score)
+		(other.score + other.moves).cmp(&(self.score + self.moves))
 	}
-	#[cfg(not(feature = "use_move"))]
+}
+
+impl Eq for UniformPriority {}
+
+impl PartialEq<Self> for UniformPriority {
+	fn eq(&self, other: &Self) -> bool {
+		self.index == other.index
+	}
+}
+
+impl PartialOrd<Self> for UniformPriority {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		Some(self.cmp(&other))
+	}
+}
+
+impl Ord for UniformPriority {
 	fn cmp(&self, other: &Self) -> Ordering {
-		self.score.cmp(&other.score).reverse()
+		other.moves.cmp(&self.moves)
+	}
+}
+
+impl Eq for GreedyPriority {}
+
+impl PartialEq<Self> for GreedyPriority {
+	fn eq(&self, other: &Self) -> bool {
+		self.score == other.score && self.index == other.index
+	}
+}
+
+impl PartialOrd<Self> for GreedyPriority {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		Some(self.cmp(&other))
+	}
+}
+
+impl Ord for GreedyPriority {
+	fn cmp(&self, other: &Self) -> Ordering {
+		other.score.cmp(&self.score)
 	}
 }

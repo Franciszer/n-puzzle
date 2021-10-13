@@ -43,7 +43,6 @@ pub fn parse_map(map: &str) -> IResult<&str, (u16, Vec<Vec<u16>>)> {
 }
 
 pub fn validate_map(size: u16, board: Vec<Vec<u16>>) -> Result<Map, &'static str> {
-	//TODO: Check discrete
 	if board.len() != size as usize {
 		return Err("Board has invalid size");
 	}

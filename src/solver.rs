@@ -1,5 +1,5 @@
 use crate::map::Map;
-use crate::node::{Node, ScoreAndIndex};
+use crate::node::{Node, Priority};
 use crate::state::Point;
 use crate::state::State;
 use ahash::AHashSet;
@@ -96,7 +96,7 @@ impl<H: Heuristic> Solver<H> {
 		false
 	}
 
-	pub fn solve(&self, map: Map) -> Solution<Rc<State>> {
+	pub fn solve<P: Priority + Ord>(&self, map: Map) -> Solution<Rc<State>> {
 		let size = map.size;
 		let root = Rc::new(State::from(map));
 
@@ -109,36 +109,30 @@ impl<H: Heuristic> Solver<H> {
 
 		let mut nodes = Vec::new();
 		let mut states_set: AHashSet<Rc<State>> = AHashSet::new();
-		let mut queue: BinaryHeap<ScoreAndIndex> = BinaryHeap::new();
+		let mut queue: BinaryHeap<P> = BinaryHeap::new();
 
 		nodes.push(root_node);
-		queue.push(ScoreAndIndex {
-			score: best_score,
-			index: 0,
-			#[cfg(feature = "use_move")]
-			moves: 0,
-		});
+		queue.push(P::new(0, best_score, 0));
 		states_set.insert(root);
 
 		let mut last_print = Instant::now();
 
 		let mut i: usize = 0;
 		loop {
-			let ScoreAndIndex {
-				index: node_index, ..
-			} = queue.pop().unwrap();
+			let node_index = queue.pop().unwrap().get_index();
 			let state = nodes[node_index].state.clone();
 			let moves = nodes[node_index].moves;
 
 			if Instant::now().duration_since(last_print) > Duration::from_secs(1) {
 				last_print = Instant::now();
 				print!(
-					"Distinct: {:9}, Iteration: {:9}, Score: {:3}\n",
+					"Distinct: {:9}, Iteration: {:9}, Score: {:3}, Moves: {}\n",
 					states_set.len(),
 					i,
-					best_score
+					best_score,
+					moves
 				);
-				let index = queue.peek().unwrap().index;
+				let index = queue.peek().unwrap().get_index();
 				println!(
 					"{}",
 					Map {
@@ -167,12 +161,7 @@ impl<H: Heuristic> Solver<H> {
 								memory: states_set.len(),
 							};
 						}
-						queue.push(ScoreAndIndex {
-							index: nodes.len(),
-							score,
-							#[cfg(feature = "use_move")]
-							moves: moves + 1,
-						});
+						queue.push(P::new(nodes.len(), score, new_node.moves));
 						if score < best_score {
 							best_score = score;
 						}
