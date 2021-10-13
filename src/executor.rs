@@ -1,10 +1,12 @@
 use crate::map::{gen_solved_map, Map};
 use crate::solver::Solver;
+
 use std::io::Write;
+use crate::heuristic::{HMannhathan, HHamming};
 
 pub struct Executor {
 	map: Map,
-	solver: Solver,
+	solver: Solver<HMannhathan>,
 }
 
 impl Executor {
@@ -30,7 +32,7 @@ impl Executor {
 			}
 			std::io::stdout().flush()
 		} else {
-			print!("Puzzle is not solvable !");
+			println!("Puzzle is not solvable !");
 			Ok(())
 		}
 	}

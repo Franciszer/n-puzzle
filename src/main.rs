@@ -8,6 +8,7 @@ mod node;
 mod parser;
 mod solver;
 mod state;
+mod heuristic;
 
 fn main() -> Result<(), Box<dyn Error>> {
 	let args: Vec<String> = env::args().collect();

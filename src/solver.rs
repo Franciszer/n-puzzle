@@ -6,11 +6,12 @@ use ahash::AHashSet;
 use std::collections::BinaryHeap;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
+use crate::heuristic::Heuristic;
 
-pub struct Solver {
+pub struct Solver<H: Heuristic> {
 	solved_map: Map,
-	solved_table: Vec<Point>,
-	size: u16,
+	heuristic: H,
+	// size: u16,
 }
 
 pub struct Solution<T> {
@@ -37,8 +38,8 @@ impl From<Solution<Rc<State>>> for Solution<State> {
 	}
 }
 
-impl Solver {
-	pub fn new(solved_map: &Map) -> Solver {
+impl<H: Heuristic> Solver<H> {
+	pub fn new(solved_map: &Map) -> Self {
 		let mut solved_table: Vec<Point> =
 			vec![Point::from_1d(0, solved_map.size); solved_map.board.len()];
 
@@ -47,24 +48,24 @@ impl Solver {
 			solved_table[*item as usize] = p;
 		}
 
-		Solver {
+		Self {
 			solved_map: solved_map.clone(),
-			solved_table,
-			size: solved_map.size,
+			// size: solved_map.size,
+			heuristic: H::new(solved_map, solved_map.size),
 		}
 	}
 
 	/// Computes the score of state using the manhatthan distance
 	/// Lower is better
-	pub fn compute_score(&self, state: &State) -> u16 {
-		let mut score: u16 = 0;
-		for (i, item) in state.board.iter().enumerate() {
-			let point = Point::from_1d(i as u16, self.size);
-			let dist = Point::manhatthan_dist(&point, &self.solved_table[*item as usize]);
-			score += dist;
-		}
-		score
-	}
+	// pub fn compute_score(&self, state: &State) -> u16 {
+	// 	let mut score: u16 = 0;
+	// 	for (i, item) in state.board.iter().enumerate() {
+	// 		let point = Point::from_1d(i as u16, self.size);
+	// 		let dist = Point::manhatthan_dist(&point, &self.solved_table[*item as usize]);
+	// 		score += dist;
+	// 	}
+	// 	score
+	// }
 
 	fn get_inv_count(board: &Vec<u16>) -> u16 {
 		let mut count: u16 = 0;
@@ -85,8 +86,8 @@ impl Solver {
 
 	#[allow(unreachable_code, unused_variables)]
 	pub fn is_solvable(&self, map: &Map) -> bool {
-		let inv_count = Solver::get_inv_count(&map.board);
-		let solved_inv_count = Solver::get_inv_count(&self.solved_map.board);
+		let inv_count = Self::get_inv_count(&map.board);
+		let solved_inv_count = Self::get_inv_count(&self.solved_map.board);
 
 		if inv_count.is_even() == solved_inv_count.is_even() {
 			return true
@@ -99,7 +100,7 @@ impl Solver {
 		let size = map.size;
 		let root = Rc::new(State::from(map));
 
-		let mut best_score = self.compute_score(&root);
+		let mut best_score = self.heuristic.compute_score(&root);
 		let root_node = Node {
 			parent: None,
 			state: root.clone(),
@@ -152,7 +153,7 @@ impl Solver {
 					let state = Rc::new(state);
 					i += 1;
 					if states_set.insert(state.clone()) {
-						let score = self.compute_score(&state);
+						let score = self.heuristic.compute_score(&state);
 						let new_node = Node {
 							parent: Some(node_index),
 							state,
