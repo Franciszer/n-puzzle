@@ -1,4 +1,5 @@
 use crate::map::{gen_solved_map, Map};
+use crate::node::{GreedyPriority, LinearPriority, UniformPriority};
 use crate::solver::Solver;
 
 use std::io::Write;
@@ -18,14 +19,18 @@ impl Executor {
 		}
 	}
 
-	pub fn run(&self) -> std::io::Result<()> {
+	pub fn run(&self, priority: Priorities) -> std::io::Result<()> {
 		if self.solver.is_solvable(&self.map) {
-			let solution = self.solver.solve(self.map.clone());
+			let solution = match priority {
+				Priorities::Linear => self.solver.solve::<LinearPriority>(self.map.clone()),
+				Priorities::Uniform => self.solver.solve::<UniformPriority>(self.map.clone()),
+				Priorities::Greedy => self.solver.solve::<GreedyPriority>(self.map.clone()),
+			};
 			for state in solution.states.iter() {
 				print!("{:size$}\n", state, size = self.map.size as usize);
 			}
 			print!(
-				"Found solution with {} moves, time complexity: {}, momery complexity: {}\n\n",
+				"Found solution with {} moves, time complexity: {}, memory complexity: {}\n\n",
 				solution.states.len(),
 				solution.time,
 				solution.memory
@@ -36,4 +41,10 @@ impl Executor {
 			Ok(())
 		}
 	}
+}
+
+pub enum Priorities {
+	Linear,
+	Greedy,
+	Uniform,
 }
