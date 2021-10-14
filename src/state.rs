@@ -1,8 +1,9 @@
 use crate::map::{fmt_board, Map};
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Point {
 	pub x: u16,
 	pub y: u16,
@@ -65,7 +66,7 @@ impl Point {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct State {
 	// state of the board
 	pub board: Vec<u16>,

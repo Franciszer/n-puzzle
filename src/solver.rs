@@ -1,9 +1,11 @@
-use std::collections::BinaryHeap;
-use std::rc::Rc;
-use std::time::{Duration, Instant};
-
 use ahash::AHashSet;
 use pancurses::Window;
+use serde::{Deserialize, Serialize};
+use std::cmp::min;
+use std::collections::BinaryHeap;
+use std::rc::Rc;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use crate::heuristic::{Heuristic, HRST};
 use crate::map::Map;
@@ -16,6 +18,7 @@ pub struct Solver {
 	heuristic: HRST,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Solution<T> {
 	pub states: Vec<T>,
 	pub size: u16,
@@ -179,6 +182,33 @@ impl Oddness for std::primitive::u16 {
 	#[inline]
 	fn is_even(&self) -> bool {
 		self & 1 == 0
+	}
+}
+
+impl Solution<State> {
+	pub fn print(&self, window: &Window) {
+		// TODO: Skip, Display very large
+		let interval = min(
+			Duration::from_secs(20) / self.states.len() as u32,
+			Duration::from_millis(250),
+		);
+		let mut last_print;
+		for state in self.states.iter() {
+			last_print = Instant::now();
+			window.clear();
+			window.printw(format!(
+				"Found solution with {} moves, time complexity: {}, memory complexity: {}\n\n",
+				self.states.len(),
+				self.time,
+				self.memory
+			));
+			window.printw(format!("{:size$}", state, size = self.size as usize));
+			window.refresh();
+			thread::sleep(interval - last_print.elapsed());
+		}
+		window.mv(window.get_max_y(), 0);
+		window.printw("Press any key to continue...");
+		window.getch();
 	}
 }
 

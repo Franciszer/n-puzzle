@@ -1,10 +1,15 @@
+use std::error::Error;
+use std::fs::File;
+use std::path::PathBuf;
+use std::rc::Rc;
 use crate::map::{gen_solved_map, Map};
 use crate::node::{GreedyPriority, LinearPriority, UniformPriority};
-use crate::solver::Solver;
-
+use crate::solver::{Solution, Solver};
 use crate::heuristic::{Euclidian, Hamming, Manhatthan, HRST};
-use pancurses::{endwin, Window};
-use std::io::Write;
+use crate::state::State;
+use pancurses::Window;
+
+
 
 pub struct Executor {
 	map: Map,
@@ -29,35 +34,40 @@ impl Executor {
 		}
 	}
 
-	pub fn run(&self, priority: Priorities) -> std::io::Result<()> {
+	pub fn run(&self, priority: Priorities, replay: Option<PathBuf>, skip: bool) -> Result<(), Box<dyn Error>> {
 		if self.solver.is_solvable(&self.map) {
-			let solution = match priority {
-				Priorities::Linear => self
-					.solver
-					.solve::<LinearPriority>(self.map.clone(), &self.window),
-				Priorities::Uniform => self
-					.solver
-					.solve::<UniformPriority>(self.map.clone(), &self.window),
-				Priorities::Greedy => self
-					.solver
-					.solve::<GreedyPriority>(self.map.clone(), &self.window),
-			};
-			endwin();
-			for state in solution.states.iter() {
-				println!("{:size$}", state, size = self.map.size as usize);
+			let solution = Solution::<State>::from(self.solve(priority));
+			if !skip {
+				solution.print(&self.window);
 			}
-			print!(
-				"Found solution with {} moves, time complexity: {}, memory complexity: {}\n\n",
-				solution.states.len(),
-				solution.time,
-				solution.memory
-			);
-			std::io::stdout().flush()
+			if let Some(mut path) = replay {
+				path.set_extension("replay");
+				let file = File::create(path)?;
+				bincode::serialize_into(file, &solution)?;
+			}
+			Ok(())
 		} else {
 			println!("Puzzle is not solvable !");
 			Ok(())
 		}
 	}
+
+	fn solve(&self, priority: Priorities) -> Solution<Rc<State>> {
+		let solution = match priority {
+			Priorities::Linear => self
+				.solver
+				.solve::<LinearPriority>(self.map.clone(), &self.window),
+			Priorities::Uniform => self
+				.solver
+				.solve::<UniformPriority>(self.map.clone(), &self.window),
+			Priorities::Greedy => self
+				.solver
+				.solve::<GreedyPriority>(self.map.clone(), &self.window),
+		};
+		solution
+	}
+
+
 }
 
 #[derive(clap::ArgEnum)]
