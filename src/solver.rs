@@ -1,17 +1,18 @@
+use std::collections::BinaryHeap;
+use std::rc::Rc;
+use std::time::{Duration, Instant};
+
+use ahash::AHashSet;
+
+use crate::heuristic::{Heuristic, HRST};
 use crate::map::Map;
 use crate::node::{Node, Priority};
 use crate::state::Point;
 use crate::state::State;
-use ahash::AHashSet;
-use std::collections::BinaryHeap;
-use std::rc::Rc;
-use std::time::{Duration, Instant};
-use crate::heuristic::Heuristic;
 
-pub struct Solver<H: Heuristic> {
+pub struct Solver {
 	solved_map: Map,
-	heuristic: H,
-	// size: u16,
+	heuristic: HRST,
 }
 
 pub struct Solution<T> {
@@ -38,8 +39,8 @@ impl From<Solution<Rc<State>>> for Solution<State> {
 	}
 }
 
-impl<H: Heuristic> Solver<H> {
-	pub fn new(solved_map: &Map) -> Self {
+impl Solver {
+	pub fn new(solved_map: &Map, heuristic: HRST) -> Self {
 		let mut solved_table: Vec<Point> =
 			vec![Point::from_1d(0, solved_map.size); solved_map.board.len()];
 
@@ -50,23 +51,12 @@ impl<H: Heuristic> Solver<H> {
 
 		Self {
 			solved_map: solved_map.clone(),
-			// size: solved_map.size,
-			heuristic: H::new(solved_map, solved_map.size),
+			heuristic,
 		}
 	}
+}
 
-	/// Computes the score of state using the manhatthan distance
-	/// Lower is better
-	// pub fn compute_score(&self, state: &State) -> u16 {
-	// 	let mut score: u16 = 0;
-	// 	for (i, item) in state.board.iter().enumerate() {
-	// 		let point = Point::from_1d(i as u16, self.size);
-	// 		let dist = Point::manhatthan_dist(&point, &self.solved_table[*item as usize]);
-	// 		score += dist;
-	// 	}
-	// 	score
-	// }
-
+impl Solver {
 	fn get_inv_count(board: &Vec<u16>) -> u16 {
 		let mut count: u16 = 0;
 
@@ -84,13 +74,12 @@ impl<H: Heuristic> Solver<H> {
 		count
 	}
 
-	#[allow(unreachable_code, unused_variables)]
 	pub fn is_solvable(&self, map: &Map) -> bool {
 		let inv_count = Self::get_inv_count(&map.board);
 		let solved_inv_count = Self::get_inv_count(&self.solved_map.board);
 
 		if inv_count.is_even() == solved_inv_count.is_even() {
-			return true
+			return true;
 		}
 
 		false
@@ -192,8 +181,9 @@ impl Oddness for std::primitive::u16 {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use crate::map::*;
+
+	use super::*;
 
 	#[test]
 	fn evaluator_build() {

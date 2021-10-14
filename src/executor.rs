@@ -2,21 +2,25 @@ use crate::map::{gen_solved_map, Map};
 use crate::node::{GreedyPriority, LinearPriority, UniformPriority};
 use crate::solver::Solver;
 
+use crate::heuristic::{Euclidian, Hamming, Manhatthan, HRST};
 use std::io::Write;
-use crate::heuristic::{Manhatthan, Hamming, Euclidian};
 
 pub struct Executor {
 	map: Map,
-	solver: Solver<Manhatthan>,
+	solver: Solver,
 }
 
 impl Executor {
-	pub fn new(map: Map) -> Self {
+	pub fn new(map: Map, heuristic: Heuristics) -> Self {
 		let solved_map = gen_solved_map(map.size as usize);
-		Executor {
-			map,
-			solver: Solver::new(&solved_map),
-		}
+		let heuristic = match heuristic {
+			Heuristics::Manhatthan => HRST::Manhatthan(Manhatthan::new(&solved_map, map.size)),
+			Heuristics::Hamming => HRST::Hamming(Hamming::new(&solved_map, map.size)),
+			Heuristics::Euclidian => HRST::Euclidian(Euclidian::new(&solved_map, map.size)),
+		};
+		let solver = Solver::new(&solved_map, heuristic);
+
+		Executor { solver, map }
 	}
 
 	pub fn run(&self, priority: Priorities) -> std::io::Result<()> {
@@ -43,8 +47,16 @@ impl Executor {
 	}
 }
 
+#[derive(clap::ArgEnum)]
 pub enum Priorities {
 	Linear,
 	Greedy,
 	Uniform,
+}
+
+#[derive(clap::ArgEnum)]
+pub enum Heuristics {
+	Manhatthan,
+	Hamming,
+	Euclidian,
 }
