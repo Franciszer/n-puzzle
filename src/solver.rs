@@ -206,8 +206,7 @@ impl Solution<State> {
 			window.refresh();
 			thread::sleep(interval - last_print.elapsed());
 		}
-		window.mv(window.get_max_y(), 0);
-		window.printw("Press any key to continue...");
+		window.mvprintw(window.get_max_y() - 1, 0, "Press any key to continue...");
 		window.getch();
 	}
 }
