@@ -10,3 +10,4 @@ use_move = []
 nom = "7.0.0"
 ahash = "0.7.5"
 clap = "3.0.0-beta.4"
+pancurses = "0.17.0"

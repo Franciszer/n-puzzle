@@ -65,7 +65,7 @@ pub fn validate_map(size: u16, board: Vec<Vec<u16>>) -> Result<Map, &'static str
 		map.board.extend(v);
 	}
 	for item in validator.iter() {
-		if *item == false {
+		if !(*item) {
 			return Err("Invalid Board");
 		}
 	}

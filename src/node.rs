@@ -90,7 +90,7 @@ impl PartialEq<Self> for LinearPriority {
 
 impl PartialOrd<Self> for LinearPriority {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-		Some(self.cmp(&other))
+		Some(self.cmp(other))
 	}
 }
 
@@ -110,7 +110,7 @@ impl PartialEq<Self> for UniformPriority {
 
 impl PartialOrd<Self> for UniformPriority {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-		Some(self.cmp(&other))
+		Some(self.cmp(other))
 	}
 }
 
@@ -130,7 +130,7 @@ impl PartialEq<Self> for GreedyPriority {
 
 impl PartialOrd<Self> for GreedyPriority {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-		Some(self.cmp(&other))
+		Some(self.cmp(other))
 	}
 }
 

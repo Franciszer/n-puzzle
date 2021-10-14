@@ -3,6 +3,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use ahash::AHashSet;
+use pancurses::Window;
 
 use crate::heuristic::{Heuristic, HRST};
 use crate::map::Map;
@@ -85,7 +86,7 @@ impl Solver {
 		false
 	}
 
-	pub fn solve<P: Priority + Ord>(&self, map: Map) -> Solution<Rc<State>> {
+	pub fn solve<P: Priority + Ord>(&self, map: Map, window: &Window) -> Solution<Rc<State>> {
 		let size = map.size;
 		let root = Rc::new(State::from(map));
 
@@ -114,21 +115,23 @@ impl Solver {
 
 			if Instant::now().duration_since(last_print) > Duration::from_secs(1) {
 				last_print = Instant::now();
-				print!(
+				window.clear();
+				window.printw(format!(
 					"Distinct: {:9}, Iteration: {:9}, Score: {:3}, Moves: {}\n",
 					states_set.len(),
 					i,
 					best_score,
 					moves
-				);
+				));
 				let index = queue.peek().unwrap().get_index();
-				println!(
+				window.printw(format!(
 					"{}",
 					Map {
 						size,
 						board: nodes[index].state.board.clone()
 					}
-				);
+				));
+				window.refresh();
 			}
 
 			for child in state.gen_children(size) {

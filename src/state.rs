@@ -110,10 +110,8 @@ impl State {
 			self.zero.down(size),
 		];
 
-		let children: [Option<State>; 4] = children_pos.map(|el| match el {
-			Some(p) => Some(self.build_child(p, size)),
-			None => None,
-		});
+		let children: [Option<State>; 4] =
+			children_pos.map(|el| el.map(|p| self.build_child(p, size)));
 
 		children
 	}

@@ -1,7 +1,8 @@
-use crate::executor::Heuristics;
 use clap::Clap;
 use executor::Executor;
+use executor::Heuristics;
 use executor::Priorities;
+use pancurses::initscr;
 use std::error::Error;
 use std::io::Read;
 use std::{fs, io};
@@ -35,7 +36,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 	};
 
 	let (_, (size, board)) = parser::parse_map(&input).or(Err("Unable to parse map !"))?;
-	let executor = Executor::new(parser::validate_map(size, board)?, opts.heuristic);
+	let executor = Executor::new(
+		parser::validate_map(size, board)?,
+		opts.heuristic,
+		initscr(),
+	);
 	executor.run(opts.search)?;
 	Ok(())
 }
