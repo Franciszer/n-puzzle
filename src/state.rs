@@ -63,7 +63,6 @@ impl Point {
 			})
 		}
 	}
-
 }
 
 #[derive(Clone)]
@@ -251,5 +250,4 @@ mod tests {
 		});
 		let _s2 = s.build_child(&Point { x: 10, y: 10 }, 3);
 	}
-
 }
