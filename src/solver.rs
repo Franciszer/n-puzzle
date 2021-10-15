@@ -211,48 +211,48 @@ impl Solution<State> {
 	}
 }
 
-#[cfg(test)]
-mod tests {
-	use crate::map::*;
-
-	use super::*;
-
-	#[test]
-	fn evaluator_build() {
-		let solved = gen_solved_map(5);
-		let e = Solver::new(&solved);
-		println!("{:?}", solved);
-		println!("len:{} {:?}", e.solved_table.len(), e.solved_table);
-	}
-
-	#[test]
-	fn evaluate_unsolved() {
-		let mut solved = gen_solved_map(5);
-		let e = Solver::new(&solved);
-
-		println!("{:?}", solved);
-		solved.board.swap(0, 1);
-		let s = State::from(solved);
-		assert_eq!(e.compute_score(&s), 2);
-
-		let mut solved = gen_solved_map(5);
-		let e = Solver::new(&solved);
-
-		println!("{:?}", solved);
-		solved.board.swap(0, 1);
-		solved.board.swap(5, 22);
-		solved.board.swap(3, 21);
-		let s = State::from(solved);
-		assert_eq!(e.compute_score(&s), 24);
-	}
-
-	#[test]
-	fn evaluate_solved() {
-		for i in 3..16 {
-			let solved = gen_solved_map(i);
-			let e = Solver::new(&solved);
-			let s = State::from(solved);
-			assert_eq!(e.compute_score(&s), 0);
-		}
-	}
-}
+// #[cfg(test)]
+// mod tests {
+// 	use crate::map::*;
+//
+// 	use super::*;
+//
+// 	#[test]
+// 	fn evaluator_build() {
+// 		let solved = gen_solved_map(5);
+// 		let e = Solver::new(&solved);
+// 		println!("{:?}", solved);
+// 		println!("len:{} {:?}", e.solved_table.len(), e.solved_table);
+// 	}
+//
+// 	#[test]
+// 	fn evaluate_unsolved() {
+// 		let mut solved = gen_solved_map(5);
+// 		let e = Solver::new(&solved);
+//
+// 		println!("{:?}", solved);
+// 		solved.board.swap(0, 1);
+// 		let s = State::from(solved);
+// 		assert_eq!(e.compute_score(&s), 2);
+//
+// 		let mut solved = gen_solved_map(5);
+// 		let e = Solver::new(&solved);
+//
+// 		println!("{:?}", solved);
+// 		solved.board.swap(0, 1);
+// 		solved.board.swap(5, 22);
+// 		solved.board.swap(3, 21);
+// 		let s = State::from(solved);
+// 		assert_eq!(e.compute_score(&s), 24);
+// 	}
+//
+// 	#[test]
+// 	fn evaluate_solved() {
+// 		for i in 3..16 {
+// 			let solved = gen_solved_map(i);
+// 			let e = Solver::new(&solved);
+// 			let s = State::from(solved);
+// 			assert_eq!(e.compute_score(&s), 0);
+// 		}
+// 	}
+// }

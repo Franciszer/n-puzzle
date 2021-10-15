@@ -145,108 +145,108 @@ impl Hash for State {
 	}
 }
 
-#[cfg(test)]
-mod tests {
-	use super::{Point, State};
-	use crate::map::Map;
-
-	#[test]
-	fn points_basic() {
-		let p = Point { x: 1, y: 1 };
-		assert_eq!(p.x, 1);
-		assert_eq!(p.y, 1);
-	}
-
-	#[test]
-	fn points_left() {
-		let p = Point { x: 1, y: 1 };
-		let p = p.left().unwrap();
-		assert_eq!(p.x, 0);
-		assert_eq!(p.y, 1);
-		let p = p.left();
-		match p {
-			Some(_) => assert!(false),
-			None => assert!(true),
-		}
-	}
-
-	#[test]
-	fn points_right() {
-		let p = Point { x: 1, y: 1 };
-		let p = p.right(3).unwrap();
-		assert_eq!(p.x, 2);
-		assert_eq!(p.y, 1);
-		let p = p.right(3);
-		match p {
-			Some(_) => assert!(false),
-			None => assert!(true),
-		}
-	}
-
-	#[test]
-	fn points_up() {
-		let p = Point { x: 1, y: 1 };
-		let p = p.up().unwrap();
-		assert_eq!(p.x, 1);
-		assert_eq!(p.y, 0);
-		let p = p.up();
-		match p {
-			Some(_) => assert!(false),
-			None => assert!(true),
-		}
-	}
-
-	#[test]
-	fn points_down() {
-		let p = Point { x: 1, y: 1 };
-		let p = p.down(3).unwrap();
-		assert_eq!(p.x, 1);
-		assert_eq!(p.y, 2);
-		let p = p.down(3);
-		match p {
-			Some(_) => assert!(false),
-			None => assert!(true),
-		}
-	}
-
-	#[test]
-	fn state_build_state() {
-		let s = State::from(Map {
-			board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8],
-			size: 3,
-		});
-		assert_eq!(s.zero.to_1d(3), 7);
-		let s = State::from(Map {
-			board: vec![0, 2, 3, 4, 5, 6, 7, 1, 8],
-			size: 3,
-		});
-		assert_eq!(s.zero.to_1d(3), 0);
-		let s = State::from(Map {
-			board: vec![1, 2, 3, 4, 5, 6, 7, 8, 0],
-			size: 3,
-		});
-		assert_eq!(s.zero.to_1d(3), 8);
-	}
-
-	#[test]
-	fn state_build_child() {
-		let s = State::from(Map {
-			board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8],
-			size: 3,
-		});
-		let s2 = s.build_child(&Point { x: 0, y: 0 }, 3);
-		assert_eq!(s2.zero.to_1d(3), 0);
-		assert_eq!(s2.board[s2.zero.to_1d(3) as usize], 0);
-		assert_eq!(s2.board[7], 1);
-	}
-
-	#[test]
-	#[should_panic]
-	fn state_build_child_panic() {
-		let s = State::from(Map {
-			board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8],
-			size: 3,
-		});
-		let _s2 = s.build_child(&Point { x: 10, y: 10 }, 3);
-	}
-}
+// #[cfg(test)]
+// mod tests {
+// 	use super::{Point, State};
+// 	use crate::map::Map;
+//
+// 	#[test]
+// 	fn points_basic() {
+// 		let p = Point { x: 1, y: 1 };
+// 		assert_eq!(p.x, 1);
+// 		assert_eq!(p.y, 1);
+// 	}
+//
+// 	#[test]
+// 	fn points_left() {
+// 		let p = Point { x: 1, y: 1 };
+// 		let p = p.left().unwrap();
+// 		assert_eq!(p.x, 0);
+// 		assert_eq!(p.y, 1);
+// 		let p = p.left();
+// 		match p {
+// 			Some(_) => assert!(false),
+// 			None => assert!(true),
+// 		}
+// 	}
+//
+// 	#[test]
+// 	fn points_right() {
+// 		let p = Point { x: 1, y: 1 };
+// 		let p = p.right(3).unwrap();
+// 		assert_eq!(p.x, 2);
+// 		assert_eq!(p.y, 1);
+// 		let p = p.right(3);
+// 		match p {
+// 			Some(_) => assert!(false),
+// 			None => assert!(true),
+// 		}
+// 	}
+//
+// 	#[test]
+// 	fn points_up() {
+// 		let p = Point { x: 1, y: 1 };
+// 		let p = p.up().unwrap();
+// 		assert_eq!(p.x, 1);
+// 		assert_eq!(p.y, 0);
+// 		let p = p.up();
+// 		match p {
+// 			Some(_) => assert!(false),
+// 			None => assert!(true),
+// 		}
+// 	}
+//
+// 	#[test]
+// 	fn points_down() {
+// 		let p = Point { x: 1, y: 1 };
+// 		let p = p.down(3).unwrap();
+// 		assert_eq!(p.x, 1);
+// 		assert_eq!(p.y, 2);
+// 		let p = p.down(3);
+// 		match p {
+// 			Some(_) => assert!(false),
+// 			None => assert!(true),
+// 		}
+// 	}
+//
+// 	#[test]
+// 	fn state_build_state() {
+// 		let s = State::from(Map {
+// 			board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8],
+// 			size: 3,
+// 		});
+// 		assert_eq!(s.zero.to_1d(3), 7);
+// 		let s = State::from(Map {
+// 			board: vec![0, 2, 3, 4, 5, 6, 7, 1, 8],
+// 			size: 3,
+// 		});
+// 		assert_eq!(s.zero.to_1d(3), 0);
+// 		let s = State::from(Map {
+// 			board: vec![1, 2, 3, 4, 5, 6, 7, 8, 0],
+// 			size: 3,
+// 		});
+// 		assert_eq!(s.zero.to_1d(3), 8);
+// 	}
+//
+// 	#[test]
+// 	fn state_build_child() {
+// 		let s = State::from(Map {
+// 			board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8],
+// 			size: 3,
+// 		});
+// 		let s2 = s.build_child(&Point { x: 0, y: 0 }, 3);
+// 		assert_eq!(s2.zero.to_1d(3), 0);
+// 		assert_eq!(s2.board[s2.zero.to_1d(3) as usize], 0);
+// 		assert_eq!(s2.board[7], 1);
+// 	}
+//
+// 	#[test]
+// 	#[should_panic]
+// 	fn state_build_child_panic() {
+// 		let s = State::from(Map {
+// 			board: vec![1, 2, 3, 4, 5, 6, 7, 0, 8],
+// 			size: 3,
+// 		});
+// 		let _s2 = s.build_child(&Point { x: 10, y: 10 }, 3);
+// 	}
+// }

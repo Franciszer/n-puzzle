@@ -18,6 +18,7 @@ mod node;
 mod parser;
 mod solver;
 mod state;
+mod generator;
 
 #[derive(Clap)]
 struct Opts {
