@@ -79,17 +79,19 @@ impl Solver {
 	pub fn is_solvable(&self, map: &Map) -> bool {
 		let inv_count = Self::get_inv_count(&map.board);
 		let half_size = map.size / 2;
-		let idx = map.board.iter().position(|&r| r == 0).unwrap();
-		let zero = Point::from_1d(idx as u16, map.size);
-		let x = match half_size > zero.x {
+		let zero_idx = map.board.iter().position(|&r| r == 0).unwrap();
+		let zero = Point::from_1d(zero_idx as u16, map.size);
+
+		let x_dist = match half_size > zero.x {
 			true => half_size - zero.x,
 			false => zero.x - half_size
 		};
-		let y = match half_size > zero.y {
+		let y_dist = match half_size > zero.y {
 			true => half_size - zero.y,
 			false => zero.y - half_size
 		};
-		if (inv_count + map.size).is_even() && (x + y).is_even() {
+
+		if (inv_count + map.size).is_even() && (x_dist + y_dist).is_even() {
 			return true
 		}
 
