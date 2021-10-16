@@ -10,7 +10,7 @@ use std::{fs, io};
 use std::fs::File;
 use crate::solver::Solution;
 use crate::state::State;
-use clap_num::si_number;
+use clap_num::si_number_range;
 use crate::map::Map;
 use crate::generator::Generator;
 
@@ -40,12 +40,13 @@ struct Opts {
 	#[clap(long)]
 	skip: bool,
 	/// generate random map of size <generate> if greater than 0
-	#[clap(short, long, parse(try_from_str=si_number), default_value="0")]
+	#[clap(short, long, parse(try_from_str=generator_size), default_value="0")]
 	generate: u16,
 	/// Replay solution
 	#[clap(short, long,parse(from_os_str))]
 	replay: Option<PathBuf>
 }
+
 
 fn main() -> Result<(), Box<dyn Error>> {
 	let opts: Opts = Opts::parse();
@@ -54,6 +55,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 	} else {
 		solve(opts)
 	}
+}
+
+fn generator_size(s: &str) -> Result<u16, String> {
+	si_number_range(s, 3, 15)
 }
 
 fn get_map(opts: &Opts) -> Result<Map, Box<dyn Error>> {
