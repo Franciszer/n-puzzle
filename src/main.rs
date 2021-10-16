@@ -40,7 +40,7 @@ struct Opts {
 	#[clap(long)]
 	skip: bool,
 	/// generate random map of size <generate> if greater than 0
-	#[clap(short, long, parse(try_from_str=generator_size), default_value="0")]
+	#[clap(short, long, parse(try_from_str=generator_size), default_value="2")]
 	generate: u16,
 	/// Replay solution
 	#[clap(short, long,parse(from_os_str))]
@@ -57,12 +57,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 	}
 }
 
+// 2 serves as the null value
 fn generator_size(s: &str) -> Result<u16, String> {
-	si_number_range(s, 3, 15)
+	si_number_range(s, 2, 15)
 }
 
 fn get_map(opts: &Opts) -> Result<Map, Box<dyn Error>> {
-	match opts.generate > 0 {
+	match opts.generate > 2 {
 		true => {
 			let g = Generator::new(opts.generate as usize);
 			Ok(g.generate())
