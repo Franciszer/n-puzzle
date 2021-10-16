@@ -10,6 +10,9 @@ use std::{fs, io};
 use std::fs::File;
 use crate::solver::Solution;
 use crate::state::State;
+use clap_num::si_number;
+use crate::map::Map;
+use crate::generator::Generator;
 
 mod executor;
 mod heuristic;
@@ -36,6 +39,9 @@ struct Opts {
 	/// Do not print solution
 	#[clap(long)]
 	skip: bool,
+	/// generate random map of size <generate> if greater than 0
+	#[clap(short, long, parse(try_from_str=si_number), default_value="0")]
+	generate: u16,
 	/// Replay solution
 	#[clap(short, long,parse(from_os_str))]
 	replay: Option<PathBuf>
@@ -50,19 +56,32 @@ fn main() -> Result<(), Box<dyn Error>> {
 	}
 }
 
-fn solve(opts: Opts) -> Result<(), Box<dyn Error>> {
-	let input: String = match opts.map {
-		Some(filename) => fs::read_to_string(filename)?,
-		None => {
-			let mut tmp = String::new();
-			io::stdin().read_to_string(&mut tmp)?;
-			tmp
+fn get_map(opts: &Opts) -> Result<Map, Box<dyn Error>> {
+	match opts.generate > 0 {
+		true => {
+			let g = Generator::new(opts.generate as usize);
+			Ok(g.generate())
 		}
-	};
+		false => {
+			let input: String = match &opts.map {
+				Some(filename) => fs::read_to_string(filename)?,
+				None => {
+					let mut tmp = String::new();
+					io::stdin().read_to_string(&mut tmp)?;
+					tmp
+				}
+			};
 
-	let (_, (size, board)) = parser::parse_map(&input).or(Err("Unable to parse map !"))?;
+			let (_, (size, board)) = parser::parse_map(&input).or(Err("Unable to parse map !"))?;
+			Ok(parser::validate_map(size, board)?)
+		}
+	}
+}
+
+fn solve(opts: Opts) -> Result<(), Box<dyn Error>> {
+	let map = get_map(&opts)?;
 	let executor = Executor::new(
-		parser::validate_map(size, board)?,
+		map,
 		opts.heuristic,
 		initscr(),
 	);

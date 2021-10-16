@@ -14,6 +14,13 @@ impl Point {
 		self.x * size + self.y
 	}
 
+	// pub fn new(x: u16, y: u16) -> Point {
+	// 	Point {
+	// 		x,
+	// 		y
+	// 	}
+	// }
+
 	pub fn from_1d(x: u16, size: u16) -> Point {
 		Point {
 			x: x / size,

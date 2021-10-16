@@ -14,8 +14,7 @@ use crate::state::Point;
 use crate::state::State;
 
 pub struct Solver {
-	solved_map: Map,
-	heuristic: HRST,
+	heuristic: HRST
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,8 +53,7 @@ impl Solver {
 		}
 
 		Self {
-			solved_map: solved_map.clone(),
-			heuristic,
+ 			heuristic,
 		}
 	}
 }
@@ -80,10 +78,19 @@ impl Solver {
 
 	pub fn is_solvable(&self, map: &Map) -> bool {
 		let inv_count = Self::get_inv_count(&map.board);
-		let solved_inv_count = Self::get_inv_count(&self.solved_map.board);
-
-		if inv_count.is_even() == solved_inv_count.is_even() {
-			return true;
+		let half_size = map.size / 2;
+		let idx = map.board.iter().position(|&r| r == 0).unwrap();
+		let zero = Point::from_1d(idx as u16, map.size);
+		let x = match half_size > zero.x {
+			true => half_size - zero.x,
+			false => zero.x - half_size
+		};
+		let y = match half_size > zero.y {
+			true => half_size - zero.y,
+			false => zero.y - half_size
+		};
+		if (inv_count + map.size).is_even() && (x + y).is_even() {
+			return true
 		}
 
 		false
