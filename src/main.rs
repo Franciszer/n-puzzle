@@ -13,6 +13,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::{fs, io};
+use std::ffi::OsStr;
+use flate2::read::GzDecoder;
 
 mod executor;
 mod generator;
@@ -89,8 +91,12 @@ fn solve(opts: Opts) -> Result<(), Box<dyn Error>> {
 }
 
 fn replay(replay_file: PathBuf) -> Result<(), Box<dyn Error>> {
-	let file = File::open(replay_file)?;
-	let solution: Solution<State> = bincode::deserialize_from(file)?;
+	let file = File::open(&replay_file)?;
+	let solution: Solution<State> = if replay_file.extension() == Some(OsStr::new("gz")) {
+		bincode::deserialize_from(GzDecoder::new(file))?
+	} else {
+		bincode::deserialize_from(file)?
+	};
 	solution.print(&initscr());
 	endwin();
 	Ok(())
