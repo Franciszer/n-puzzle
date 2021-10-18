@@ -14,7 +14,7 @@ use crate::state::Point;
 use crate::state::State;
 
 pub struct Solver {
-	heuristic: HRST
+	heuristic: HRST,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -52,9 +52,7 @@ impl Solver {
 			solved_table[*item as usize] = p;
 		}
 
-		Self {
- 			heuristic,
-		}
+		Self { heuristic }
 	}
 }
 
@@ -84,15 +82,15 @@ impl Solver {
 
 		let x_dist = match half_size > zero.x {
 			true => half_size - zero.x,
-			false => zero.x - half_size
+			false => zero.x - half_size,
 		};
 		let y_dist = match half_size > zero.y {
 			true => half_size - zero.y,
-			false => zero.y - half_size
+			false => zero.y - half_size,
 		};
 
 		if (inv_count + map.size).is_even() && (x_dist + y_dist).is_even() {
-			return true
+			return true;
 		}
 
 		false

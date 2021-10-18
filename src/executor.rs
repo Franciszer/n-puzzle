@@ -1,15 +1,13 @@
+use crate::heuristic::{Euclidian, Hamming, Manhatthan, HRST};
+use crate::map::{gen_solved_map, Map};
+use crate::node::{GreedyPriority, LinearPriority, UniformPriority};
+use crate::solver::{Solution, Solver};
+use crate::state::State;
+use pancurses::Window;
 use std::error::Error;
 use std::fs::File;
 use std::path::PathBuf;
 use std::rc::Rc;
-use crate::map::{gen_solved_map, Map};
-use crate::node::{GreedyPriority, LinearPriority, UniformPriority};
-use crate::solver::{Solution, Solver};
-use crate::heuristic::{Euclidian, Hamming, Manhatthan, HRST};
-use crate::state::State;
-use pancurses::Window;
-
-
 
 pub struct Executor {
 	map: Map,
@@ -34,7 +32,12 @@ impl Executor {
 		}
 	}
 
-	pub fn run(&self, priority: Priorities, replay: Option<PathBuf>, skip: bool) -> Result<(), Box<dyn Error>> {
+	pub fn run(
+		&self,
+		priority: Priorities,
+		replay: Option<PathBuf>,
+		skip: bool,
+	) -> Result<(), Box<dyn Error>> {
 		if self.solver.is_solvable(&self.map) {
 			let solution = Solution::<State>::from(self.solve(priority));
 			if !skip {
@@ -66,8 +69,6 @@ impl Executor {
 		};
 		solution
 	}
-
-
 }
 
 #[derive(clap::ArgEnum)]
