@@ -8,7 +8,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::heuristic::{Heuristic, HRST};
-use crate::map::Map;
+use crate::map::{gen_solved_map, Map};
 use crate::node::{Node, Priority};
 use crate::state::Point;
 use crate::state::State;
@@ -65,7 +65,7 @@ impl Solver {
 				let left = board[i];
 				let right = board[j];
 
-				if right != 0 && right > left {
+				if  right > left && right != 0 && left != 0 {
 					count += 1;
 				}
 			}
@@ -75,25 +75,19 @@ impl Solver {
 	}
 
 	pub fn is_solvable(&self, map: &Map) -> bool {
-		let inv_count = Self::get_inv_count(&map.board);
-		let half_size = map.size / 2;
-		let zero_idx = map.board.iter().position(|&r| r == 0).unwrap();
-		let zero = Point::from_1d(zero_idx as u16, map.size);
+		let solved_map = gen_solved_map(map.size as usize);
+		let mut inv_count = Self::get_inv_count(&map.board);
+		let mut solved_inv_count = Self::get_inv_count(&solved_map.board);
 
-		let x_dist = match half_size > zero.x {
-			true => half_size - zero.x,
-			false => zero.x - half_size,
-		};
-		let y_dist = match half_size > zero.y {
-			true => half_size - zero.y,
-			false => zero.y - half_size,
-		};
+		if map.size.is_even() == true {
+			let zero = map.board.iter().position(|&r| r == 0).unwrap() as u16;
+			let solved_zero = solved_map.board.iter().position(|&r| r == 0).unwrap() as u16;
 
-		if (inv_count + map.size).is_even() && (x_dist + y_dist).is_even() {
-			return true;
+			inv_count += zero / map.size;
+			solved_inv_count += solved_zero / map.size;
 		}
 
-		false
+		inv_count.is_even() == solved_inv_count.is_even()
 	}
 
 	pub fn solve<P: Priority + Ord>(&self, map: Map, window: &Window) -> Solution<Rc<State>> {
@@ -211,7 +205,9 @@ impl Solution<State> {
 			));
 			window.printw(format!("{:size$}", state, size = self.size as usize));
 			window.refresh();
-			thread::sleep(interval - last_print.elapsed());
+			if interval > last_print.elapsed() {
+				thread::sleep(interval - last_print.elapsed());
+			}
 		}
 		window.mvprintw(window.get_max_y() - 1, 0, "Press any key to continue...");
 		window.getch();
